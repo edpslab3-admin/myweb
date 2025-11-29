@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Attendance Check</title>
+<style>
+body {font-family: Arial, sans-serif; background:#f5f6fa; padding:20px;}
+.container {max-width:700px; margin:0 auto; background:white; padding:20px; border-radius:15px; box-shadow:0 5px 15px rgba(0,0,0,0.1);}
+h2{margin-bottom:15px;text-align:center;}
+input[type=text]{width:100%;padding:10px;margin-bottom:10px;border-radius:10px;border:1px solid #ccc;}
+button{padding:10px 15px;border:none;border-radius:10px;background:#0984e3;color:white;cursor:pointer;margin-top:5px;margin-right:5px;}
+.checkbox-list {margin-top:15px;}
+.checkbox-list label {display:block; margin-bottom:5px; font-size:16px;}
+.status {margin-top:10px; font-weight:bold;}
+#dashboard {display:none;margin-top:20px;}
+</style>
+</head>
+<body>
+<div class="container" id="loginBox">
+<h2>เข้าสู่ระบบ Admin</h2>
+<input type="text" id="user" placeholder="ชื่อผู้ใช้">
+<input type="text" id="pass" placeholder="รหัสผ่าน">
+<button onclick="login()">เข้าสู่ระบบ</button>
+</div>
+
+<div class="container" id="mainBox" style="display:none;">
+<h2>เช็คชื่อ</h2>
+<div class="checkbox-list" id="checkboxList"></div>
+<button onclick="saveAttendance()">บันทึกสถานะ</button>
+<button onclick="exportCSV()">ดาวน์โหลด CSV</button>
+<button onclick="exportXLSX()">ดาวน์โหลด Excel</button>
+<button onclick="showDashboard()">เปิดแดชบอร์ด</button>
+<div class="status" id="status"></div>
+
+<div id="dashboard">
+<h3>สรุปจำนวนผู้มา/ไม่มา</h3>
+<canvas id="chartDay" height="200" style="background:white;border-radius:10px;padding:10px;"></canvas>
+</div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+const API = location.origin;
+const students = ["นักเรียน 1","นักเรียน 2","นักเรียน 3","นักเรียน 4","นักเรียน 5","นักเรียน 6","นักเรียน 7","นักเรียน 8","นักเรียน 9","นักเรียน 10","นักเรียน 11","นักเรียน 12","นักเรียน 13","นักเรียน 14","นักเรียน 15","นักเรียน 16"];
+
+function login(){
+  const u=document.getElementById('user').value;
+  const p=document.getElementById('pass').value;
+  if(u==='admin' && p==='1234'){
+    document.getElementById('loginBox').style.display='none';
+    document.getElementById('mainBox').style.display='block';
+    renderCheckboxes();
+    loadToday();
+  } else alert('เข้าสู่ระบบไม่สำเร็จ');
+}
+
+function renderCheckboxes(){
+  const container = document.getElementById('checkboxList');
+  container.innerHTML='';
+  students.forEach((name,i)=>{
+    const label = document.createElement('label');
+    label.innerHTML = `<input type='checkbox' id='chk_${i}'> ${name}`;
+    container.appendChild(label);
+  });
+}
+
+async function loadToday(){
+  const date = new Date().toISOString().split('T')[0];
+  const res = await fetch(API+'/attendance');
+  const data = await res.json();
+  if(data[date]){
+    students.forEach((_,i)=>{
+      document.getElementById(`chk_${i}`).checked = data[date][i];
+    });
+  }
+}
+
+async function saveAttendance(){
+  const date = new Date().toISOString().split('T')[0];
+  const status = students.map((_,i)=>document.getElementById(`chk_${i}`).checked);
+  await fetch(API+'/attendance',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({date,status})});
+  document.getElementById('status').innerText='บันทึกเรียบร้อยแล้ว!';
+}
+
+function exportCSV(){
+  const date = new Date().toISOString().split('T')[0];
+  const rows=[['ชื่อ','สถานะ']];
+  students.forEach((name,i)=>{
+    const chk = document.getElementById(`chk_${i}`).checked;
+    rows.push([name,chk?'มา':'ไม่มา']);
+  });
+  let csv = rows.map(r=>r.join(',')).join('\n');
+  const blob = new Blob([csv], {type:'text/csv'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href=url; a.download=`attendance_${date}.csv`; a.click();
+  URL.revokeObjectURL(url);
+}
+
+function exportXLSX(){
+  const rows=[['ชื่อ','สถานะ']];
+  students.forEach((name,i)=>{
+    const chk = document.getElementById(`chk_${i}`).checked;
+    rows.push([name,chk?'มา':'ไม่มา']);
+  });
+  const ws=XLSX.utils.aoa_to_sheet(rows);
+  const wb=XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb,ws,'Attendance');
+  XLSX.writeFile(wb,`attendance_${new Date().toISOString().split('T')[0]}.xlsx`);
+}
+
+function showDashboard(){
+  document.getElementById('dashboard').style.display='block';
+  renderDashboard();
+}
+
+async function renderDashboard(){
+  const res = await fetch(API+'/attendance');
+  const data = await res.json();
+  const date = new Date().toISOString().split('T')[0];
+  const today = data[date] || students.map(()=>false);
+  const present = today.filter(v=>v).length;
+  const absent = today.length - present;
+
+  if(window._chart) window._chart.destroy();
+  window._chart = new Chart(document.getElementById('chartDay'), {
+    type:'bar',
+    data:{ labels:['มา','ไม่มา'], datasets:[{label:'จำนวน', data:[present,absent], backgroundColor:['#00b894','#d63031']] },
+    options:{ responsive:true, plugins:{ legend:{display:false} } }
+  });
+}
+</script>
+</body>
+</html>
