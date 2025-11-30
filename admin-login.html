@@ -1,0 +1,17 @@
+
+<!doctype html><html lang="th"><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/><title>Admin Login</title><link rel="stylesheet" href="styles.css"></head><body>
+<div class="container"><div class="card" style="max-width:420px;margin:20px auto">
+<h3>Admin Login</h3>
+<input id="auser" class="input" placeholder="admin user"/>
+<input id="apass" class="input" placeholder="password" type="password" style="margin-top:8px"/>
+<div style="margin-top:12px"><button class="btn" onclick="alogin()">เข้าสู่ระบบ Admin</button></div>
+<div class="small" style="margin-top:8px">บัญชีแอดมิน: admin / adminpass</div>
+</div></div>
+<script>
+function alogin(){
+  const u=document.getElementById('auser').value.trim();
+  const p=document.getElementById('apass').value.trim();
+  if(u==='admin' && p==='adminpass'){ location.href='admin.html'; } else alert('ล็อกอินไม่สำเร็จ');
+}
+</script>
+</body></html>

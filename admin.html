@@ -1,0 +1,67 @@
+
+<!doctype html><html lang="th"><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Admin - Enterprise PRO</title><link rel="stylesheet" href="styles.css"/><script src="https://cdn.jsdelivr.net/npm/chart.js"></script></head><body>
+<div class="container">
+  <div class="header"><div class="logo">EP</div><div><h2 style="margin:0;color:var(--blue)">Admin Dashboard</h2><div class="small">ภาพรวมองค์กร</div></div></div>
+  <div class="card">
+    <h3>สรุปตามแผนก</h3>
+    <div style="display:flex;gap:12px">
+      <div style="flex:1"><canvas id="deptChart"></canvas></div>
+      <div style="flex:1"><canvas id="leaveChart"></canvas></div>
+    </div>
+    <div style="margin-top:12px">
+      <button class="btn" onclick="exportOrg()">Export Organization CSV</button>
+    </div>
+  </div>
+  <div class="card">
+    <h3>ดาต้าทั้งหมด (localStorage demo)</h3>
+    <pre id="raw"></pre>
+  </div>
+</div>
+<script>
+function gather(){
+  const depts=['check100','packing','loading'];
+  const out={};
+  depts.forEach(d=>{
+    const raw = localStorage.getItem('attendance_'+d);
+    if(!raw) out[d]=null; else out[d]=JSON.parse(raw);
+  });
+  return out;
+}
+function render(){
+  const data = gather();
+  document.getElementById('raw').innerText = JSON.stringify(data,null,2);
+  const labels = ['check100','packing','loading'];
+  const counts = labels.map(l => {
+    const v = localStorage.getItem('attendance_'+l);
+    if(!v) return 0;
+    const rec = JSON.parse(v).records;
+    return rec.filter(r=> r.am||r.ot ).length;
+  });
+  const ctx = document.getElementById('deptChart');
+  new Chart(ctx, {type:'bar', data:{labels:labels, datasets:[{label:'คนมา (วันนี้)', data:counts}]}});
+  const leaves = {ลากิจ:0,ลาป่วย:0,ลาพักร้อน:0};
+  Object.keys(data).forEach(k=>{
+    const v = data[k];
+    if(!v) return;
+    v.records.forEach(r=>{ if(r.leave) leaves[r.leave] = (leaves[r.leave]||0)+1; });
+  });
+  const ctx2 = document.getElementById('leaveChart');
+  new Chart(ctx2, {type:'pie', data:{labels:Object.keys(leaves), datasets:[{data:Object.values(leaves)}]}});
+}
+function exportOrg(){
+  const data = gather();
+  let csv='dept,user,empid,name,am,ot,absent,leave,note\n';
+  Object.keys(data).forEach(dept=>{
+    const v = data[dept]; if(!v) return;
+    v.records.forEach(rr=>{
+      csv += [dept, v.user, rr.id, 'พนักงาน '+rr.id, rr.am, rr.ot, rr.absent, rr.leave||'', (rr.note||'').replace(/\n/g,' ')].join(',') + '\n';
+    });
+  });
+  const a=document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([csv],{type:'text/csv'}));
+  a.download = 'org_export.csv'; a.click();
+}
+window.addEventListener('load', render);
+</script>
+</body></html>

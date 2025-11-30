@@ -1,25 +1,24 @@
-# Attendance System (ระบบเช็คชื่อพนักงาน)
 
-โปรเจกต์นี้เป็นระบบเช็คชื่อพนักงานออนไลน์ ประกอบด้วย 3 ส่วนหลัก:
-1. **Frontend** – HTML/JS แสดงหน้าเว็บ หน้า Login, หน้าติ๊กเช็คชื่อ, รายงานต่าง ๆ
-2. **Backend API** – Node.js + Express ทำงานเป็นฝั่ง Server สำหรับเก็บข้อมูลและเชื่อมต่อฐานข้อมูล
-3. **ข้อมูลกลาง (Central Storage)** – ข้อมูลทั้งหมดเก็บใน JSON หรือ Database เพื่อให้ทุกคนเห็นข้อมูลชุดเดียวกัน
+Enterprise PRO 100% - Full bundle
 
----
+Folders:
+- frontend/  (static files)
+- backend/   (Node.js Express API)
 
-## 🚀 Features (สิ่งที่ระบบทำได้)
+Quick local start:
+1. Install Node.js (>=16)
+2. cd backend
+3. npm install
+4. npm start  (server runs on 3000)
+5. Open frontend/index.html in browser (or serve static via nginx/Render).
 
-- Login Admin **6 คน**
-- รายชื่อพนักงาน **16 คน**
-- ติ๊กเช็คชื่อ: ✔ มา / ✘ ไม่มา
-- ดูสรุป:
-  - รายวัน  
-  - รายสัปดาห์  
-  - รายบุคคล  
-- Export ข้อมูลเป็น **Excel (.xlsx)**
-- ข้อมูลเก็บกลางบน Server ใช้ API เดียวกัน
-- รองรับหลายอุปกรณ์ (มือถือ, แท็บเล็ต, คอม)
-
----
-
-## 🗂️ Project Structure (โครงสร้างโปรเจกต์)
+To enable full online deployment on Render:
+- Create a Git repo with this project and push.
+- Create a Web Service in Render using the backend folder (Node service)
+- Build: npm install  Start: npm start
+- For static frontend, use Render Static Site or serve frontend files from the backend (add express static middleware).
+API endpoints:
+GET /api/departments  - list last saved per-dept
+POST /api/save        - save dept attendance (body: {dept,user,records})
+GET /api/all          - admin get all
+GET /api/export       - download CSV of all records

@@ -2,49 +2,45 @@
 const express = require('express');
 const fs = require('fs');
 const path = require('path');
+const cors = require('cors');
 const app = express();
-const PORT = process.env.PORT || 3000;
-
+app.use(cors());
 app.use(express.json());
-app.use(express.static(path.join(__dirname, 'public')));
 
-const USERS = JSON.parse(fs.readFileSync('./users.json'));
-const DB_FILE = './db.json';
-function loadDB(){ return JSON.parse(fs.readFileSync(DB_FILE)); }
-function saveDB(x){ fs.writeFileSync(DB_FILE, JSON.stringify(x)); }
+const DB = path.join(__dirname, 'database.json');
+if(!fs.existsSync(DB)) fs.writeFileSync(DB, JSON.stringify({departments:{check100:[],packing:[],loading:[]}, records:[]}));
 
-// login
-app.post('/login',(req,res)=>{
-  const {user,pass} = req.body;
-  if(USERS.admins[user] && USERS.admins[user]===pass){
-    return res.json({ok:true, token:user, user});
-  }
-  return res.status(400).json({error:true});
+function readDB(){ return JSON.parse(fs.readFileSync(DB)); }
+function writeDB(d){ fs.writeFileSync(DB, JSON.stringify(d,null,2)); }
+
+app.get('/api/departments', (req,res)=>{
+  const db = readDB();
+  res.json(db.departments);
 });
 
-// logout
-app.post('/logout',(req,res)=>{ return res.json({ok:true}); });
-
-// list users
-app.get('/users',(req,res)=>{
-  res.json({employees: USERS.employees});
-});
-
-// get attendance
-app.get('/attendance',(req,res)=>{
-  const db = loadDB();
-  res.json(db.attendance || {});
-});
-
-// save attendance
-app.post('/attendance',(req,res)=>{
-  const {date,status,token} = req.body;
-  if(!token) return res.status(403).json({error:"no token"});
-  const db = loadDB();
-  if(!db.attendance) db.attendance = {};
-  db.attendance[date] = status;
-  saveDB(db);
+app.post('/api/save', (req,res)=>{
+  const {dept, user, records} = req.body;
+  const db = readDB();
+  db.departments[dept] = {user, date: new Date().toISOString().split('T')[0], records};
+  db.records.push({dept, user, date: new Date().toISOString().split('T')[0], records});
+  writeDB(db);
   res.json({ok:true});
 });
 
-app.listen(PORT, ()=> console.log("SERVER B running "+PORT));
+app.get('/api/all', (req,res)=>{
+  const db = readDB();
+  res.json(db);
+});
+
+app.get('/api/export', (req,res)=>{
+  const db = readDB();
+  let csv = 'dept,user,date,empid,name,am,ot,absent,leave,note\n';
+  db.records.forEach(entry=>{
+    entry.records.forEach(r=>{ csv += [entry.dept, entry.user, entry.date, r.id, 'พนักงาน '+r.id, r.am, r.ot, r.absent, r.leave||'', (r.note||'').replace(/\n/g,' ')].join(',') + '\n'; });
+  });
+  res.setHeader('Content-Type','text/csv');
+  res.setHeader('Content-Disposition','attachment; filename=org_export.csv');
+  res.send(csv);
+});
+
+const PORT = process.env.PORT || 3000; app.listen(PORT, ()=>console.log('Backend running on',PORT));
