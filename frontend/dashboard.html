@@ -8,13 +8,13 @@
 <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
 </head>
 <body>
-<div class="container">  <!-- Header -->  <div class="header">
+<div class="container">  <div class="header">
     <div class="logo">EP</div>
     <div>
       <h2 style="margin:0; color:var(--blue)">Dashboard</h2>
       <div class="small" id="meta"></div>
     </div>
-  </div>  <!-- Attendance Table -->  <div class="card">
+  </div>  <div class="card">
     <h3 id="titleDept"></h3>
     <table class="table" id="attTable">
       <thead>
@@ -32,44 +32,41 @@
     </table>
     <div style="display:flex; gap:8px; margin-top:12px">
       <button class="btn" id="saveBtn">บันทึก</button>
-      <button class="btn" id="csvBtn">Export CSV</button>
       <button class="btn" id="xlsBtn">Export Excel</button>
     </div>
-  </div>  <!-- Charts -->  <div class="card">
-    <h3>กราฟสรุปการเข้าทำงาน</h3>
-    <div style="display:flex; gap:16px;">
-      <div style="flex:1"><canvas id="chartDay"></canvas></div>
-      <div style="flex:1"><canvas id="chartWeek"></canvas></div>
-      <div style="flex:1"><canvas id="chartMonth"></canvas></div>
+  </div>  <div class="card">
+    <h3>กราฟสรุป</h3>
+    <div style="display:flex; gap:16px; flex-wrap:wrap;">
+      <div style="flex:1; min-width:300px"><canvas id="chartDay"></canvas></div>
+      <div style="flex:1; min-width:300px"><canvas id="chartWeek"></canvas></div>
+      <div style="flex:1; min-width:300px"><canvas id="chartMonth"></canvas></div>
     </div>
-  </div>
-</div><!-- Logout --><button id="logoutBtn" style="position:fixed; top:20px; right:20px; padding:10px 20px; background:#d9534f; color:white; border:none; border-radius:6px; cursor:pointer;">ออกจากระบบ</button>
+  </div></div><button id="logoutBtn" style="position:fixed; top:20px; right:20px; padding:10px 20px; background:#d9534f; color:white; border:none; border-radius:6px; cursor:pointer;">ออกจากระบบ</button>
 
 <script>
-const params = new URLSearchParams(location.search);
-let dept = params.get("dept") || "เช็ค100% กะ1";
-const user = params.get("user") || "user1";
+// ---------- ตั้งค่าแผนก ----------
+const employeesDB = {
+  "เช็ค100% กะ1": Array.from({length:20},(_,i)=>({id:i+1,name:`พนักงาน1-${i+1}`,position:"พนักงาน"})),
+  "เช็ค100% กะ2": Array.from({length:20},(_,i)=>({id:i+1,name:`พนักงาน2-${i+1}`,position:"พนักงาน"})),
+  "แพ็คกิ้ง": Array.from({length:20},(_,i)=>({id:i+1,name:`แพ็คกิ้ง-${i+1}`,position:"พนักงาน"})),
+  "ผลิต": Array.from({length:20},(_,i)=>({id:i+1,name:`ผลิต-${i+1}`,position:"พนักงาน"}))
+};
+
+// ---------- กำหนดแผนกจาก URL ----------
+let dept = new URLSearchParams(location.search).get("dept") || "เช็ค100% กะ1";
+const user = new URLSearchParams(location.search).get("user") || "user1";
+if(!employeesDB[dept]) dept="เช็ค100% กะ1";
+
 document.getElementById("meta").innerText = "แผนก: " + dept + " | ผู้ใช้: " + user;
 document.getElementById("titleDept").innerText = "เช็คชื่อ (" + dept + ")";
 
-let employees = [];
-let attendanceData = {};
-
-// โหลดรายชื่อจาก Server
-async function getEmployees(){
-  const res = await fetch('/employees');
-  const data = await res.json();
-  employees = data[dept] || [];
-  buildTable();
-}
-
-// สร้างตาราง
+// ---------- สร้างตาราง ----------
 function buildTable(){
-  const tbody = document.querySelector("#attTable tbody");
-  tbody.innerHTML = '';
-  employees.forEach(e=>{
-    const tr = document.createElement("tr");
-    tr.innerHTML = `
+  const tbody=document.querySelector("#attTable tbody");
+  tbody.innerHTML="";
+  employeesDB[dept].forEach(e=>{
+    const tr=document.createElement("tr");
+    tr.innerHTML=`
       <td>${e.name}</td>
       <td>${e.position}</td>
       <td><input type="checkbox" id="am_${e.id}" onchange="checkConflict(${e.id})"></td>
@@ -88,148 +85,125 @@ function buildTable(){
     tbody.appendChild(tr);
   });
 }
-
-// ป้องกันเลือกสถานะซ้ำ
 window.checkConflict = function(id){
-  const am = document.getElementById("am_"+id);
-  const ot = document.getElementById("ot_"+id);
-  const abs = document.getElementById("abs_"+id);
-  if(abs.checked){ am.checked=false; ot.checked=false; }
-  if(am.checked||ot.checked){ abs.checked=false; }
+  const am=document.getElementById("am_"+id);
+  const ot=document.getElementById("ot_"+id);
+  const abs=document.getElementById("abs_"+id);
+  if(abs.checked){am.checked=false; ot.checked=false;}
+  if(am.checked||ot.checked){abs.checked=false;}
 }
-
-// เก็บข้อมูลจากตาราง
 function collectRecords(){
   return Array.from(document.querySelectorAll("#attTable tbody tr")).map((tr,i)=>{
-    const id = i+1;
+    const id=i+1;
     return {
       id,
-      name: tr.cells[0].innerText,
-      position: tr.cells[1].innerText,
-      am: tr.cells[2].querySelector("input").checked,
-      ot: tr.cells[3].querySelector("input").checked,
-      absent: tr.cells[4].querySelector("input").checked,
-      leave: tr.cells[5].querySelector("select").value,
-      note: tr.cells[6].querySelector("input").value
+      name:tr.cells[0].innerText,
+      position:tr.cells[1].innerText,
+      am:tr.cells[2].querySelector("input").checked,
+      ot:tr.cells[3].querySelector("input").checked,
+      absent:tr.cells[4].querySelector("input").checked,
+      leave:tr.cells[5].querySelector("select").value,
+      note:tr.cells[6].querySelector("input").value
     };
   });
 }
 
-// บันทึกไป Server
-document.getElementById("saveBtn").addEventListener("click", async ()=>{
-  const records = collectRecords();
-  const date = new Date().toISOString().slice(0,10);
-  const res = await fetch('/attendance',{
-    method:'POST',
-    headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({dept, records, date})
-  });
-  const result = await res.json();
-  alert("บันทึกแล้ว: "+result.message);
-  fetchAttendanceAndDrawCharts();
+// ---------- บันทึกใน localStorage ----------
+document.getElementById("saveBtn").addEventListener("click", ()=>{
+  const records=collectRecords();
+  const date=new Date().toISOString().slice(0,10);
+  const all=JSON.parse(localStorage.getItem("attendance_all")||"{}");
+  if(!all[date]) all[date]={};
+  all[date][dept]=records;
+  localStorage.setItem("attendance_all",JSON.stringify(all));
+  alert("บันทึกเรียบร้อยแล้ว");
+  buildCharts();
 });
 
-// Export CSV
-document.getElementById("csvBtn").addEventListener("click", async ()=>{
-  const res = await fetch('/attendance');
-  const data = await res.json();
-  const csvRows = [["date","dept","id","name","position","am","ot","absent","leave","note"]];
-  Object.entries(data).forEach(([date, depts])=>{
-    Object.entries(depts).forEach(([d, recs])=>{
-      recs.forEach(r=>{
-        csvRows.push([date,d,r.id,r.name,r.position,r.am,r.ot,r.absent,r.leave,r.note]);
+// ---------- Export Excel ----------
+document.getElementById("xlsBtn").addEventListener("click", ()=>{
+  const all=JSON.parse(localStorage.getItem("attendance_all")||"{}");
+  const wb=XLSX.utils.book_new();
+  Object.entries(all).forEach(([date,depts])=>{
+    Object.entries(depts).forEach(([d,records])=>{
+      const data = records.map(r=>{
+        return {...r,date,dept:d,totalAM:r.am?1:0,totalOT:r.ot?1:0,totalAbsent:r.absent?1:0};
       });
+      const ws=XLSX.utils.json_to_sheet(data);
+      XLSX.utils.book_append_sheet(wb,ws,`${d}_${date}`);
     });
   });
-  const csv = csvRows.map(e=>e.join(",")).join("\n");
-  const a = document.createElement("a");
-  a.href = URL.createObjectURL(new Blob([csv]));
-  a.download = "attendance.csv";
-  a.click();
+  XLSX.writeFile(wb,"attendance.xlsx");
 });
 
-// Export Excel
-document.getElementById("xlsBtn").addEventListener("click", async ()=>{
-  const res = await fetch('/attendance');
-  const data = await res.json();
-  const wb = XLSX.utils.book_new();
-  Object.entries(data).forEach(([date,depts])=>{
-    Object.entries(depts).forEach(([d,recs])=>{
-      const ws = XLSX.utils.json_to_sheet(recs.map(r=>({...r, date, dept:d})));
-      XLSX.utils.book_append_sheet(wb, ws, `${d}_${date}`);
-    });
-  });
-  XLSX.writeFile(wb, "attendance.xlsx");
-});
+// ---------- สร้างกราฟ ----------
+let charts = [];
+function buildCharts(){
+  const all=JSON.parse(localStorage.getItem("attendance_all")||"{}");
 
-// โหลด attendance จาก server และวาดกราฟ
-async function fetchAttendanceAndDrawCharts(){
-  const res = await fetch('/attendance');
-  attendanceData = await res.json();
-  drawCharts();
+  const today=new Date().toISOString().slice(0,10);
+  const todayRecords=(all[today]&&all[today][dept])||[];
+  buildBarChart("chartDay",todayRecords);
+
+  const weekSummary=summarizePeriod(all,7);
+  buildSummaryChart("chartWeek",weekSummary);
+
+  const monthSummary=summarizePeriod(all,30);
+  buildSummaryChart("chartMonth",monthSummary);
 }
-
-// สร้างกราฟ
-let chartDay, chartWeek, chartMonth;
-function drawCharts(){
-  const today = new Date().toISOString().slice(0,10);
-  const days = Object.keys(attendanceData).sort();
-  const weeklyCounts = {};
-  const monthlyCounts = {};
-
-  // เตรียมข้อมูลรายวัน
-  const todayRecords = attendanceData[today]?.[dept] || [];
-  const labelsDay = todayRecords.map(r=>r.name);
-  const dataDay = todayRecords.map(r=> r.am ? 1 : 0);
-
-  if(chartDay) chartDay.destroy();
-  chartDay = new Chart(document.getElementById("chartDay"), {
-    type:'bar',
-    data:{labels:labelsDay,datasets:[{label:'เช้า',data:dataDay,backgroundColor:'rgba(54,162,235,0.6)'}]},
-    options:{responsive:true,plugins:{title:{display:true,text:'รายบุคคล (วันนี้)'}}}
-  });
-
-  // เตรียมข้อมูลรายสัปดาห์
-  const weekLabels = employees.map(e=>e.name);
-  const weekData = weekLabels.map(name=>{
-    let count=0;
-    days.slice(-7).forEach(day=>{
-      const recs = attendanceData[day]?.[dept]||[];
-      const r = recs.find(r=>r.name===name);
-      if(r && r.am) count++;
+function summarizePeriod(allData,days){
+  const summary={};
+  const dates=Object.keys(allData).sort().slice(-days);
+  dates.forEach(date=>{
+    const depts=allData[date];
+    if(!depts[dept]) return;
+    depts[dept].forEach(r=>{
+      if(!summary[r.name]) summary[r.name]={am:0,ot:0,absent:0};
+      if(r.am) summary[r.name].am++;
+      if(r.ot) summary[r.name].ot++;
+      if(r.absent) summary[r.name].absent++;
     });
-    return count;
   });
-  if(chartWeek) chartWeek.destroy();
-  chartWeek = new Chart(document.getElementById("chartWeek"), {
+  return summary;
+}
+function buildBarChart(canvasId,records){
+  if(charts[canvasId]) charts[canvasId].destroy();
+  const labels=records.map(r=>r.name);
+  const amData=records.map(r=>r.am?1:0);
+  const otData=records.map(r=>r.ot?1:0);
+  const absentData=records.map(r=>r.absent?1:0);
+  charts[canvasId]=new Chart(document.getElementById(canvasId),{
     type:'bar',
-    data:{labels:weekLabels,datasets:[{label:'เช้า',data:weekData,backgroundColor:'rgba(255,159,64,0.6)'}]},
-    options:{responsive:true,plugins:{title:{display:true,text:'รายบุคคล (สัปดาห์ล่าสุด)'}}}
+    data:{labels,datasets:[
+      {label:'AM',data:amData,backgroundColor:'rgba(54,162,235,0.7)'},
+      {label:'OT',data:otData,backgroundColor:'rgba(75,192,192,0.7)'},
+      {label:'Absent',data:absentData,backgroundColor:'rgba(255,99,132,0.7)'}
+    ]},
+    options:{responsive:true,scales:{y:{beginAtZero:true}}}
   });
-
-  // เตรียมข้อมูลรายเดือน
-  const monthLabels = employees.map(e=>e.name);
-  const monthData = monthLabels.map(name=>{
-    let count=0;
-    days.slice(-30).forEach(day=>{
-      const recs = attendanceData[day]?.[dept]||[];
-      const r = recs.find(r=>r.name===name);
-      if(r && r.am) count++;
-    });
-    return count;
-  });
-  if(chartMonth) chartMonth.destroy();
-  chartMonth = new Chart(document.getElementById("chartMonth"), {
+}
+function buildSummaryChart(canvasId,summary){
+  if(charts[canvasId]) charts[canvasId].destroy();
+  const labels=Object.keys(summary);
+  const amData=labels.map(n=>summary[n].am);
+  const otData=labels.map(n=>summary[n].ot);
+  const absentData=labels.map(n=>summary[n].absent);
+  charts[canvasId]=new Chart(document.getElementById(canvasId),{
     type:'bar',
-    data:{labels:monthLabels,datasets:[{label:'เช้า',data:monthData,backgroundColor:'rgba(75,192,192,0.6)'}]},
-    options:{responsive:true,plugins:{title:{display:true,text:'รายบุคคล (เดือนล่าสุด)'}}}
+    data:{labels,datasets:[
+      {label:'AM',data:amData,backgroundColor:'rgba(54,162,235,0.7)'},
+      {label:'OT',data:otData,backgroundColor:'rgba(75,192,192,0.7)'},
+      {label:'Absent',data:absentData,backgroundColor:'rgba(255,99,132,0.7)'}
+    ]},
+    options:{responsive:true,scales:{y:{beginAtZero:true}}}
   });
 }
 
-// Load employees และ attendance
-getEmployees().then(fetchAttendanceAndDrawCharts);
+// ---------- โหลดหน้า ----------
+buildTable();
+buildCharts();
 
-// Logout
+// ---------- Logout ----------
 document.getElementById("logoutBtn").addEventListener("click",()=>{
   localStorage.removeItem("user_login");
   window.location.href="index.html";
