@@ -3,7 +3,22 @@
 <div class="card"><h3>เช็คชื่อ (20 คน)</h3><table class="table" id="attTable"><thead><tr><th>ชื่อ</th><th>เช้า</th><th>OT</th><th>ไม่มา</th><th>ประเภทลา</th><th>หมายเหตุ</th></tr></thead><tbody></tbody></table>
 <div style="display:flex;gap:8px;margin-top:12px"><button class="btn" id="saveBtn">บันทึก (เซฟที่ server)</button><button class="btn" id="csvBtn">Export CSV</button><button class="btn" id="xlsBtn">Export Excel</button></div></div>
 <div class="card"><h3>สรุป (วันนี้ และ 7 วัน)</h3><div style="display:flex;gap:16px"><div style="flex:1"><canvas id="chartDay"></canvas></div><div style="flex:1"><canvas id="chartWeek"></canvas></div></div></div></div>
-<script>
+<div style="position: fixed; top: 20px; right: 20px;">
+    <button id="logoutBtn" 
+        style="padding: 10px 20px; background-color: #d9534f; color: white; border: none; border-radius: 6px; cursor:pointer;">
+        ออกจากระบบ
+    </button>
+</div>
+  <script>
+document.getElementById("logoutBtn").addEventListener("click", function() {
+    // ลบ token / session
+    localStorage.removeItem("user_login");
+
+    // เด้งกลับไปหน้า login
+    window.location.href = "/frontend/login.html";
+});
+  </script>
+  <script>
 const params=new URLSearchParams(location.search);
 const dept = params.get('dept') || '';
 const user = params.get('user') || 'user1';
