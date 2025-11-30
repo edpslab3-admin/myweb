@@ -29,33 +29,42 @@
         </tr>
       </thead>
       <tbody></tbody>
-    </table><div style="display:flex; gap:8px; margin-top:12px">
-  <button class="btn" id="saveBtn">บันทึก</button>
-  <button class="btn" id="csvBtn">Export CSV</button>
-  <button class="btn" id="xlsBtn">Export Excel</button>
-</div>
-
-  </div>  <!-- Graph -->  <div class="card">
-    <h3>กราฟสรุปรายวัน</h3>
-    <canvas id="chartDay"></canvas>
-  </div></div><!-- Logout --><button id="logoutBtn" style="position:fixed; top:20px; right:20px; padding:10px 20px; background:#d9534f; color:white; border:none; border-radius:6px; cursor:pointer;">ออกจากระบบ</button>
+    </table>
+    <div style="display:flex; gap:8px; margin-top:12px">
+      <button class="btn" id="saveBtn">บันทึก</button>
+      <button class="btn" id="csvBtn">Export CSV</button>
+      <button class="btn" id="xlsBtn">Export Excel</button>
+    </div>
+  </div>  <!-- Charts -->  <div class="card">
+    <h3>กราฟสรุปการเข้าทำงาน</h3>
+    <div style="display:flex; gap:16px;">
+      <div style="flex:1"><canvas id="chartDay"></canvas></div>
+      <div style="flex:1"><canvas id="chartWeek"></canvas></div>
+      <div style="flex:1"><canvas id="chartMonth"></canvas></div>
+    </div>
+  </div>
+</div><!-- Logout --><button id="logoutBtn" style="position:fixed; top:20px; right:20px; padding:10px 20px; background:#d9534f; color:white; border:none; border-radius:6px; cursor:pointer;">ออกจากระบบ</button>
 
 <script>
-const dept = new URLSearchParams(location.search).get("dept") || "เช็ค100% กะ1";
-const user = new URLSearchParams(location.search).get("user") || "user1";
-
+const params = new URLSearchParams(location.search);
+let dept = params.get("dept") || "เช็ค100% กะ1";
+const user = params.get("user") || "user1";
 document.getElementById("meta").innerText = "แผนก: " + dept + " | ผู้ใช้: " + user;
 document.getElementById("titleDept").innerText = "เช็คชื่อ (" + dept + ")";
 
-// ดึงรายชื่อพนักงานจาก Server
-async function getEmployees() {
-  const res = await fetch('http://localhost:3000/employees');
+let employees = [];
+let attendanceData = {};
+
+// โหลดรายชื่อจาก Server
+async function getEmployees(){
+  const res = await fetch('/employees');
   const data = await res.json();
-  return data[dept] || [];
+  employees = data[dept] || [];
+  buildTable();
 }
 
 // สร้างตาราง
-function buildTable(employees) {
+function buildTable(){
   const tbody = document.querySelector("#attTable tbody");
   tbody.innerHTML = '';
   employees.forEach(e=>{
@@ -80,7 +89,7 @@ function buildTable(employees) {
   });
 }
 
-// ป้องกันติ๊กสถานะซ้ำ
+// ป้องกันเลือกสถานะซ้ำ
 window.checkConflict = function(id){
   const am = document.getElementById("am_"+id);
   const ot = document.getElementById("ot_"+id);
@@ -89,7 +98,7 @@ window.checkConflict = function(id){
   if(am.checked||ot.checked){ abs.checked=false; }
 }
 
-// เก็บค่าจากตาราง
+// เก็บข้อมูลจากตาราง
 function collectRecords(){
   return Array.from(document.querySelectorAll("#attTable tbody tr")).map((tr,i)=>{
     const id = i+1;
@@ -110,23 +119,23 @@ function collectRecords(){
 document.getElementById("saveBtn").addEventListener("click", async ()=>{
   const records = collectRecords();
   const date = new Date().toISOString().slice(0,10);
-  const res = await fetch('http://localhost:3000/attendance',{
+  const res = await fetch('/attendance',{
     method:'POST',
     headers:{'Content-Type':'application/json'},
     body:JSON.stringify({dept, records, date})
   });
   const result = await res.json();
   alert("บันทึกแล้ว: "+result.message);
-  drawCharts();
+  fetchAttendanceAndDrawCharts();
 });
 
 // Export CSV
 document.getElementById("csvBtn").addEventListener("click", async ()=>{
-  const res = await fetch('http://localhost:3000/attendance');
+  const res = await fetch('/attendance');
   const data = await res.json();
   const csvRows = [["date","dept","id","name","position","am","ot","absent","leave","note"]];
-  Object.entries(data).forEach(([date,depts])=>{
-    Object.entries(depts).forEach(([d,recs])=>{
+  Object.entries(data).forEach(([date, depts])=>{
+    Object.entries(depts).forEach(([d, recs])=>{
       recs.forEach(r=>{
         csvRows.push([date,d,r.id,r.name,r.position,r.am,r.ot,r.absent,r.leave,r.note]);
       });
@@ -141,7 +150,7 @@ document.getElementById("csvBtn").addEventListener("click", async ()=>{
 
 // Export Excel
 document.getElementById("xlsBtn").addEventListener("click", async ()=>{
-  const res = await fetch('http://localhost:3000/attendance');
+  const res = await fetch('/attendance');
   const data = await res.json();
   const wb = XLSX.utils.book_new();
   Object.entries(data).forEach(([date,depts])=>{
@@ -153,48 +162,77 @@ document.getElementById("xlsBtn").addEventListener("click", async ()=>{
   XLSX.writeFile(wb, "attendance.xlsx");
 });
 
-// Load employees & build table
-getEmployees().then(buildTable);
+// โหลด attendance จาก server และวาดกราฟ
+async function fetchAttendanceAndDrawCharts(){
+  const res = await fetch('/attendance');
+  attendanceData = await res.json();
+  drawCharts();
+}
+
+// สร้างกราฟ
+let chartDay, chartWeek, chartMonth;
+function drawCharts(){
+  const today = new Date().toISOString().slice(0,10);
+  const days = Object.keys(attendanceData).sort();
+  const weeklyCounts = {};
+  const monthlyCounts = {};
+
+  // เตรียมข้อมูลรายวัน
+  const todayRecords = attendanceData[today]?.[dept] || [];
+  const labelsDay = todayRecords.map(r=>r.name);
+  const dataDay = todayRecords.map(r=> r.am ? 1 : 0);
+
+  if(chartDay) chartDay.destroy();
+  chartDay = new Chart(document.getElementById("chartDay"), {
+    type:'bar',
+    data:{labels:labelsDay,datasets:[{label:'เช้า',data:dataDay,backgroundColor:'rgba(54,162,235,0.6)'}]},
+    options:{responsive:true,plugins:{title:{display:true,text:'รายบุคคล (วันนี้)'}}}
+  });
+
+  // เตรียมข้อมูลรายสัปดาห์
+  const weekLabels = employees.map(e=>e.name);
+  const weekData = weekLabels.map(name=>{
+    let count=0;
+    days.slice(-7).forEach(day=>{
+      const recs = attendanceData[day]?.[dept]||[];
+      const r = recs.find(r=>r.name===name);
+      if(r && r.am) count++;
+    });
+    return count;
+  });
+  if(chartWeek) chartWeek.destroy();
+  chartWeek = new Chart(document.getElementById("chartWeek"), {
+    type:'bar',
+    data:{labels:weekLabels,datasets:[{label:'เช้า',data:weekData,backgroundColor:'rgba(255,159,64,0.6)'}]},
+    options:{responsive:true,plugins:{title:{display:true,text:'รายบุคคล (สัปดาห์ล่าสุด)'}}}
+  });
+
+  // เตรียมข้อมูลรายเดือน
+  const monthLabels = employees.map(e=>e.name);
+  const monthData = monthLabels.map(name=>{
+    let count=0;
+    days.slice(-30).forEach(day=>{
+      const recs = attendanceData[day]?.[dept]||[];
+      const r = recs.find(r=>r.name===name);
+      if(r && r.am) count++;
+    });
+    return count;
+  });
+  if(chartMonth) chartMonth.destroy();
+  chartMonth = new Chart(document.getElementById("chartMonth"), {
+    type:'bar',
+    data:{labels:monthLabels,datasets:[{label:'เช้า',data:monthData,backgroundColor:'rgba(75,192,192,0.6)'}]},
+    options:{responsive:true,plugins:{title:{display:true,text:'รายบุคคล (เดือนล่าสุด)'}}}
+  });
+}
+
+// Load employees และ attendance
+getEmployees().then(fetchAttendanceAndDrawCharts);
 
 // Logout
 document.getElementById("logoutBtn").addEventListener("click",()=>{
   localStorage.removeItem("user_login");
   window.location.href="index.html";
 });
-
-// วาดกราฟรายวัน
-async function drawCharts() {
-  const res = await fetch('http://localhost:3000/attendance');
-  const data = await res.json();
-  const labels = [];
-  const amData = [];
-  const absentData = [];
-
-  Object.entries(data).forEach(([date, depts])=>{
-    if(depts[dept]){
-      labels.push(date);
-      let am=0, absent=0;
-      depts[dept].forEach(r=>{
-        if(r.am) am++;
-        if(r.absent) absent++;
-      });
-      amData.push(am);
-      absentData.push(absent);
-    }
-  });
-
-  new Chart(document.getElementById('chartDay'), {
-    type:'bar',
-    data:{
-      labels,
-      datasets:[
-        {label:'มาเช้า', data:amData, backgroundColor:'green'},
-        {label:'ไม่มา', data:absentData, backgroundColor:'red'}
-      ]
-    },
-    options:{responsive:true}
-  });
-}
-
 </script></body>
 </html>
