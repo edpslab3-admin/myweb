@@ -1,5 +1,6 @@
 <!doctype html>
 <html lang="th">
+
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -25,7 +26,7 @@
 
     <!-- Attendance Table -->
     <div class="card">
-      <h3>เช็คชื่อ (20 คน)</h3>
+      <h3 id="titleDept"></h3>
 
       <table class="table" id="attTable">
         <thead>
@@ -42,7 +43,7 @@
       </table>
 
       <div style="display:flex; gap:8px; margin-top:12px">
-        <button class="btn" id="saveBtn">บันทึก (เซฟที่ server)</button>
+        <button class="btn" id="saveBtn">บันทึก</button>
         <button class="btn" id="csvBtn">Export CSV</button>
         <button class="btn" id="xlsBtn">Export Excel</button>
       </div>
@@ -68,37 +69,116 @@
     </button>
   </div>
 
-  <!-- Logout Script -->
   <script>
-    document.getElementById("logoutBtn").addEventListener("click", function() {
-      localStorage.removeItem("user_login");
-      window.location.href = "/frontend/login.html";
-    });
-  </script>
+    /* -------------------------------------
+       รายชื่อพนักงานแต่ละแผนก (20 / 20 / 20 / 15)
+    -------------------------------------- */
+    const employeesDB = {
+      "ช่าง": [
+        { "id": 1, "name": "สมชาย ช่างเหล็ก" },
+        { "id": 2, "name": "ธนพล คำดี" },
+        { "id": 3, "name": "ภัทรวุฒิ ใจกล้า" },
+        { "id": 4, "name": "อดิศักดิ์ ทองมี" },
+        { "id": 5, "name": "ชูชาติ จันทรา" },
+        { "id": 6, "name": "ศักดิ์ดา วงศ์คำ" },
+        { "id": 7, "name": "ภาณุเดช อรุณ" },
+        { "id": 8, "name": "ทรงพล ลายไทย" },
+        { "id": 9, "name": "สันติภาพ สอนดี" },
+        { "id": 10, "name": "ชุติเดช แซ่ลี้" },
+        { "id": 11, "name": "กฤษณะ ไชยวงศ์" },
+        { "id": 12, "name": "ศราวุฒิ กองคำ" },
+        { "id": 13, "name": "ปฏิภาณ อ่อนศรี" },
+        { "id": 14, "name": "จิรายุ หอมหวล" },
+        { "id": 15, "name": "ธัชกร ขันแข็ง" },
+        { "id": 16, "name": "สุรเชษฐ์ คมสัน" },
+        { "id": 17, "name": "ดนัย ปัญญา" },
+        { "id": 18, "name": "ปิยะวัฒน์ ศรีสุข" },
+        { "id": 19, "name": "ชานนท์ จันทรวงศ์" },
+        { "id": 20, "name": "วีรภัทร ดวงดี" }
+      ],
 
-  <!-- Main Script -->
-  <script>
+      "ผลิต": [
+        { "id": 1, "name": "พัชรพล พูนทรัพย์" },
+        { "id": 2, "name": "กิตติธัช ชัยมงคล" },
+        { "id": 3, "name": "ธนากร รุ่งโรจน์" },
+        { "id": 4, "name": "ภานุวัฒน์ สายทอง" },
+        { "id": 5, "name": "รณพงษ์ อุดม" },
+        { "id": 6, "name": "ปรัชญา เมืองไทย" },
+        { "id": 7, "name": "ชยกร สาระดี" },
+        { "id": 8, "name": "ณัฐพงษ์ ฟ้าใหม่" },
+        { "id": 9, "name": "ภาคภูมิ จิตรดี" },
+        { "id": 10, "name": "สิรวิชญ์ ศักดิ์ชัย" },
+        { "id": 11, "name": "ปิยวัฒน์ ทองยศ" },
+        { "id": 12, "name": "ธนวัฒน์ จันทรสุข" },
+        { "id": 13, "name": "ธีรภัทร บุญชม" },
+        { "id": 14, "name": "อัครเดช สันติ" },
+        { "id": 15, "name": "ภานุเดช มงคลสวัสดิ์" },
+        { "id": 16, "name": "วรพล อารีย์" },
+        { "id": 17, "name": "พีระดนย์ สิงห์ทอง" },
+        { "id": 18, "name": "ศุภกิตติ์ แก้วใส" },
+        { "id": 19, "name": "ภาสกร คงทน" },
+        { "id": 20, "name": "จักรพงษ์ แซ่ตั้ง" }
+      ],
+
+      "คลังสินค้า": [
+        { "id": 1, "name": "วิชญ์พล เกิดดี" },
+        { "id": 2, "name": "ธีรเดช รัตน์วงศ์" },
+        { "id": 3, "name": "ณัฐพล ชาญชัย" },
+        { "id": 4, "name": "พงศ์พิพัฒน์ อินทร์ทอง" },
+        { "id": 5, "name": "ภาคิน ปรีดี" },
+        { "id": 6, "name": "นครินทร์ ใจงาม" },
+        { "id": 7, "name": "สุรเดช เรืองศรี" },
+        { "id": 8, "name": "สันติภาพ ทองแท้" },
+        { "id": 9, "name": "ชนินทร์ ใจดี" },
+        { "id": 10, "name": "กฤตภาส อุดมทรัพย์" },
+        { "id": 11, "name": "คชภัค วงศ์ภักดี" },
+        { "id": 12, "name": "ศุภกร มีชัย" },
+        { "id": 13, "name": "ธีรเมธ คงทน" },
+        { "id": 14, "name": "อัศวิน พูนเงิน" },
+        { "id": 15, "name": "ภัทรพล ศรีสุข" },
+        { "id": 16, "name": "ปิยะวัฒน์ คำแหง" },
+        { "id": 17, "name": "วรวิชญ์ มณีทอง" },
+        { "id": 18, "name": "กฤษฎา พงไพร" },
+        { "id": 19, "name": "ศิวกร อิ่มดี" },
+        { "id": 20, "name": "ณัฐดนัย เฉลิมชัย" }
+      ],
+
+      "เชือกร้อย": [
+        { "id": 1, "name": "อนุชา ร้อยเส้น" },
+        { "id": 2, "name": "ศิวะพงษ์ บุญมาก" },
+        { "id": 3, "name": "ภาณุวัฒน์ จันทรา" },
+        { "id": 4, "name": "สมปอง ปักเชือก" },
+        { "id": 5, "name": "สุริยา ดวงทอง" },
+        { "id": 6, "name": "นรินทร์ มั่นดี" },
+        { "id": 7, "name": "ธีรพงษ์ คำดี" },
+        { "id": 8, "name": "วรเมธ ใจแกร่ง" },
+        { "id": 9, "name": "พิชัย อารีย์" },
+        { "id": 10, "name": "ศุภชัย นิ่มนวล" },
+        { "id": 11, "name": "อดิเรก พูนศักดิ์" },
+        { "id": 12, "name": "ธนดล ใจบุญ" },
+        { "id": 13, "name": "สุทธิพงษ์ ศักดิ์ชัย" },
+        { "id": 14, "name": "เจษฎา คงทน" },
+        { "id": 15, "name": "จิรภัทร ทองแท้" }
+      ]
+    };
+
+    /* ------------------------------------------------------------------
+       Main Script
+    ------------------------------------------------------------------ */
+
     const params = new URLSearchParams(location.search);
-    const dept = params.get('dept') || '';
-    const user = params.get('user') || 'user1';
+    const dept = params.get("dept") || "ช่าง";
+    const user = params.get("user") || "user1";
 
-    document.getElementById('meta').innerText = 'แผนก: ' + dept + ' | ผู้ใช้: ' + user;
+    document.getElementById("meta").innerText = "แผนก: " + dept + " | ผู้ใช้: " + user;
+    document.getElementById("titleDept").innerText = "เช็คชื่อ (" + dept + ")";
 
-    async function getEmployees() {
-      try {
-        const r = await fetch('/api/employees');
-        if (!r.ok) throw 'no';
-        const j = await r.json();
-        if (j[dept]) return j[dept];
-      } catch (e) {}
-      return Array.from({length:20}, (_, i) => ({
-        id: i + 1,
-        name: 'พนักงาน ' + (i + 1)
-      }));
+    function getEmployees() {
+      return employeesDB[dept] || [];
     }
 
-    async function buildTable() {
-      const employees = await getEmployees();
+    function buildTable() {
+      const employees = getEmployees();
       const tbody = document.querySelector('#attTable tbody');
       tbody.innerHTML = '';
 
@@ -123,129 +203,72 @@
       });
     }
 
-    // กันติ๊ก "มา" และ "ไม่มา" พร้อมกัน
-    window.checkConflict = function(id) {
-      const am = document.getElementById('am_' + id);
-      const ot = document.getElementById('ot_' + id);
-      const abs = document.getElementById('abs_' + id);
+    window.checkConflict = function (id) {
+      const am = document.getElementById("am_" + id);
+      const ot = document.getElementById("ot_" + id);
+      const abs = document.getElementById("abs_" + id);
 
-      if (abs.checked && (am.checked || ot.checked)) {
+      if (abs.checked) {
         am.checked = false;
         ot.checked = false;
       }
-
-      if ((am.checked || ot.checked) && abs.checked) {
+      if (am.checked || ot.checked) {
         abs.checked = false;
       }
-    }
+    };
 
     function collectRecords() {
-      const employees = document.querySelectorAll('#attTable tbody input[type="checkbox"]');
-      const ids = new Set();
-
-      employees.forEach(input => {
-        const id = parseInt(input.id.split('_')[1]);
-        ids.add(id);
-      });
-
+      const employees = getEmployees();
       const recs = [];
-      ids.forEach(id => {
+
+      employees.forEach(e => {
         recs.push({
-          id: id,
-          am: document.getElementById('am_' + id).checked,
-          ot: document.getElementById('ot_' + id).checked,
-          absent: document.getElementById('abs_' + id).checked,
-          leave: document.getElementById('leave_' + id).value,
-          note: document.getElementById('note_' + id).value
+          id: e.id,
+          name: e.name,
+          am: document.getElementById('am_' + e.id).checked,
+          ot: document.getElementById('ot_' + e.id).checked,
+          absent: document.getElementById('abs_' + e.id).checked,
+          leave: document.getElementById('leave_' + e.id).value,
+          note: document.getElementById('note_' + e.id).value
         });
       });
+
       return recs;
     }
 
-    document.getElementById('saveBtn').addEventListener('click', async () => {
-      const records = collectRecords();
-      const body = { dept, user, records };
-
-      const r = await fetch('/api/save', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body)
-      });
-
-      if (r.ok) alert('บันทึกเรียบร้อย');
-      else alert('บันทึกไม่สำเร็จ');
-
-      renderCharts(records);
-    });
-
-    document.getElementById('csvBtn').addEventListener('click', () => {
+    document.getElementById("csvBtn").addEventListener("click", () => {
       const recs = collectRecords();
-      let csv = 'id,name,am,ot,absent,leave,note\n';
+      let csv = "id,name,am,ot,absent,leave,note\n";
 
       recs.forEach(r => {
         csv += [
-          r.id,
-          'พนักงาน ' + r.id,
-          r.am,
-          r.ot,
-          r.absent,
-          r.leave || '',
-          (r.note || '').replace(/\n/g, ' ')
-        ].join(',') + '\n';
+          r.id, r.name, r.am, r.ot, r.absent,
+          r.leave || "", (r.note || "").replace(/\n/g, " ")
+        ].join(",") + "\n";
       });
 
-      const a = document.createElement('a');
-      a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }));
-      a.download = 'attendance_' + (dept || 'all') + '.csv';
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(new Blob([csv]));
+      a.download = "attendance_" + dept + ".csv";
       a.click();
     });
 
-    // Export เป็น Excel .xlsx ของจริง
-    document.getElementById('xlsBtn').addEventListener('click', () => {
-      const data = collectRecords().map(r => ({
-        ID: r.id,
-        Name: 'พนักงาน ' + r.id,
-        Morning: r.am,
-        OT: r.ot,
-        Absent: r.absent,
-        Leave: r.leave,
-        Note: r.note
-      }));
-
+    document.getElementById("xlsBtn").addEventListener("click", () => {
+      const data = collectRecords();
       const wb = XLSX.utils.book_new();
       const ws = XLSX.utils.json_to_sheet(data);
-      XLSX.utils.book_append_sheet(wb, ws, 'Attendance');
-      XLSX.writeFile(wb, 'attendance_' + (dept || 'all') + '.xlsx');
+      XLSX.utils.book_append_sheet(wb, ws, "Attendance");
+      XLSX.writeFile(wb, "attendance_" + dept + ".xlsx");
     });
 
-    function renderCharts(records) {
-      const present = records.filter(r => r.am || r.ot).length;
-      const absent = records.filter(r => r.absent).length;
+    document.getElementById("logoutBtn").addEventListener("click", () => {
+      localStorage.removeItem("user_login");
+      window.location.href = "index.html";
+    });
 
-      if (window._day) window._day.destroy();
-      window._day = new Chart(document.getElementById('chartDay'), {
-        type: 'bar',
-        data: {
-          labels: ['มา', 'ไม่มา'],
-          datasets: [{ label: 'จำนวน', data: [present, absent] }]
-        }
-      });
-
-      const labels = ['-6', '-5', '-4', '-3', '-2', '-1', 'วันนี้'];
-      const data = labels.map(() => Math.floor(present / 2 + Math.random() * (present / 2)));
-
-      if (window._wk) window._wk.destroy();
-      window._wk = new Chart(document.getElementById('chartWeek'), {
-        type: 'line',
-        data: {
-          labels,
-          datasets: [{ label: 'คนมา', data, fill: false }]
-        }
-      });
-    }
-
-    window.addEventListener('load', buildTable);
+    window.onload = buildTable;
   </script>
 
 </body>
+
 </html>
