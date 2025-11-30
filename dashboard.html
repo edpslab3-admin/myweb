@@ -7,9 +7,9 @@
     <h3>เช็คชื่อ (20 คน)</h3>
     <table class="table" id="attTable"><thead><tr><th>ชื่อ</th><th>เช้า</th><th>OT</th><th>ไม่มา</th><th>ประเภทลา</th><th>หมายเหตุ</th></tr></thead><tbody></tbody></table>
     <div style="display:flex;gap:8px;margin-top:12px">
-      <button class="btn" onclick="save()">บันทึก</button>
-      <button class="btn" onclick="exportCSV()">Export CSV</button>
-      <button class="btn" onclick="exportXLSX()">Export Excel</button>
+      <button class="btn" id="saveBtn">บันทึก (เซฟที่ server)</button>
+      <button class="btn" id="csvBtn">Export CSV</button>
+      <button class="btn" id="xlsBtn">Export Excel</button>
     </div>
   </div>
   <div class="card">
@@ -25,71 +25,77 @@ const params=new URLSearchParams(location.search);
 const dept = params.get('dept') || '';
 const user = params.get('user') || 'user1';
 document.getElementById('meta').innerText = 'แผนก: ' + dept + ' | ผู้ใช้: ' + user;
-const employees = Array.from({length:20}, (_,i)=> ({id:i+1, name:'พนักงาน ' + (i+1)}));
-const tbody = document.querySelector('#attTable tbody');
-employees.forEach(e=>{
-  const tr=document.createElement('tr');
-  tr.innerHTML = `<td>${e.name}</td>
-    <td><input type="checkbox" id="am_${e.id}"></td>
-    <td><input type="checkbox" id="ot_${e.id}"></td>
-    <td><input type="checkbox" id="abs_${e.id}"></td>
-    <td><select id="leave_${e.id}"><option value="">-</option><option>ลากิจ</option><option>ลาป่วย</option><option>ลาพักร้อน</option></select></td>
-    <td><input id="note_${e.id}" class="input"></td>`;
-  tbody.appendChild(tr);
-});
-function getKey(){ return 'attendance_'+dept; }
-function save(){
-  const today=new Date().toISOString().split('T')[0];
-  const data = {date: today, user: user, records: []};
+// employees will be requested from backend at /api/employees (demo fallback to 20)
+async function getEmployees(){
+  try{
+    const r = await fetch('/api/employees');
+    if(!r.ok) throw 'no';
+    const j = await r.json();
+    if(j[dept]) return j[dept];
+  }catch(e){}
+  // fallback: 20 names
+  return Array.from({length:20},(_,i)=>({id:i+1, name:'พนักงาน '+(i+1)}));
+}
+async function buildTable(){
+  const employees = await getEmployees();
+  const tbody = document.querySelector('#attTable tbody');
+  tbody.innerHTML='';
   employees.forEach(e=>{
-    data.records.push({
-      id:e.id,
-      am: !!document.getElementById('am_'+e.id).checked,
-      ot: !!document.getElementById('ot_'+e.id).checked,
-      absent: !!document.getElementById('abs_'+e.id).checked,
-      leave: document.getElementById('leave_'+e.id).value,
-      note: document.getElementById('note_'+e.id).value
+    const tr=document.createElement('tr');
+    tr.innerHTML = `<td>${e.name}</td>
+      <td><input type="checkbox" id="am_${e.id}"></td>
+      <td><input type="checkbox" id="ot_${e.id}"></td>
+      <td><input type="checkbox" id="abs_${e.id}"></td>
+      <td><select id="leave_${e.id}"><option value="">-</option><option>ลากิจ</option><option>ลาป่วย</option><option>ลาพักร้อน</option></select></td>
+      <td><input id="note_${e.id}" class="input"></td>`;
+    tbody.appendChild(tr);
+  });
+}
+function collectRecords(){
+  const rows = document.querySelectorAll('#attTable tbody tr');
+  const recs = [];
+  rows.forEach((r,i)=>{
+    const id = i+1;
+    recs.push({
+      id,
+      am: !!document.getElementById('am_'+id).checked,
+      ot: !!document.getElementById('ot_'+id).checked,
+      absent: !!document.getElementById('abs_'+id).checked,
+      leave: document.getElementById('leave_'+id).value,
+      note: document.getElementById('note_'+id).value
     });
   });
-  localStorage.setItem(getKey(), JSON.stringify(data));
-  alert('บันทึกเรียบร้อย (saved locally). For production, backend API will save centrally.');
-  renderCharts();
+  return recs;
 }
-function loadAll(){
-  const raw = localStorage.getItem(getKey());
-  if(!raw) return;
-  const d = JSON.parse(raw);
-  d.records.forEach(r=>{
-    document.getElementById('am_'+r.id).checked = r.am;
-    document.getElementById('ot_'+r.id).checked = r.ot;
-    document.getElementById('abs_'+r.id).checked = r.absent;
-    document.getElementById('leave_'+r.id).value = r.leave || '';
-    document.getElementById('note_'+r.id).value = r.note || '';
-  });
-}
-function exportCSV(){
-  const rows = [['ชื่อ','am','ot','absent','leave','note']];
-  employees.forEach(e=>{
-    rows.push([e.name, document.getElementById('am_'+e.id).checked, document.getElementById('ot_'+e.id).checked, document.getElementById('abs_'+e.id).checked, document.getElementById('leave_'+e.id).value, document.getElementById('note_'+e.id).value]);
-  });
-  const csv = rows.map(r=>r.map(c=>`"${String(c).replace(/"/g,'""')}"`).join(',')).join('\n');
-  const blob = new Blob([csv], {type:'text/csv'});
-  const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='attendance_'+dept+'.csv'; a.click();
-}
-function exportXLSX(){ exportCSV(); }
-function renderCharts(){
-  const raw = localStorage.getItem(getKey());
-  const present = raw ? JSON.parse(raw).records.filter(r=>r.am || r.ot).length : 0;
-  const absent = raw ? JSON.parse(raw).records.filter(r=>r.absent).length : 0;
+document.getElementById('saveBtn').addEventListener('click', async ()=>{
+  const records = collectRecords();
+  const body = {dept, user, records};
+  const r = await fetch('/api/save', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body)});
+  if(r.ok) alert('บันทึกเรียบร้อย'); else alert('บันทึกไม่สำเร็จ');
+  renderCharts(records);
+});
+document.getElementById('csvBtn').addEventListener('click', ()=>{
+  const recs = collectRecords();
+  let csv = 'id,name,am,ot,absent,leave,note\n';
+  recs.forEach((r,i)=> csv += [r.id, 'พนักงาน '+r.id, r.am, r.ot, r.absent, r.leave||'', (r.note||'').replace(/\n/g,' ')].join(',')+'\n');
+  const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'})); a.download='attendance_'+dept+'.csv'; a.click();
+});
+document.getElementById('xlsBtn').addEventListener('click', ()=>{ document.getElementById('csvBtn').click(); });
+
+function renderCharts(records){
+  const present = records.filter(r=> r.am || r.ot).length;
+  const absent = records.filter(r=> r.absent).length;
   const dayCtx = document.getElementById('chartDay').getContext('2d');
   if(window._day) window._day.destroy();
-  window._day = new Chart(dayCtx, {type:'bar', data:{labels:['มา','ไม่มา'], datasets:[{label:'จำนวน',data:[present, absent]}]}});
+  window._day = new Chart(dayCtx,{type:'bar', data:{labels:['มา','ไม่มา'], datasets:[{label:'จำนวน', data:[present, absent]}]}});
+  // week demo
   const labels = ['-6','-5','-4','-3','-2','-1','วันนี้'];
-  const data = labels.map((_,i) => Math.round(10 + Math.random()*10));
+  const data = labels.map(()=> Math.round(10 + Math.random()*10));
   const wkCtx = document.getElementById('chartWeek').getContext('2d');
   if(window._wk) window._wk.destroy();
-  window._wk = new Chart(wkCtx, {type:'line', data:{labels:labels,datasets:[{label:'คนมา',data:data,fill:false}]}});
+  window._wk = new Chart(wkCtx,{type:'line', data:{labels:labels, datasets:[{label:'คนมา', data:data, fill:false}]}});
 }
-window.addEventListener('load', ()=>{ loadAll(); renderCharts(); });
+
+window.addEventListener('load', async ()=>{ await buildTable(); });
 </script>
 </body></html>
