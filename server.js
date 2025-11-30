@@ -1,0 +1,12 @@
+const express=require('express');
+const fs=require('fs');
+const path=require('path');
+const app=express();
+app.use(express.json());
+app.use(express.static(__dirname));
+let db={};
+if(fs.existsSync('db.json')) db=JSON.parse(fs.readFileSync('db.json'));
+app.get('/attendance',(req,res)=>res.json(db));
+app.post('/attendance',(req,res)=>{db[req.body.date]=req.body.status;fs.writeFileSync('db.json',JSON.stringify(db));res.json({ok:true});});
+app.get('*',(req,res)=>res.sendFile(path.join(__dirname,'index.html')));
+app.listen(3000);
