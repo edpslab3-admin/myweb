@@ -41,44 +41,53 @@
   </div>
 
   <!-- Script -->
-  <script>
-    const params = new URLSearchParams(window.location.search);
-    const dept = params.get("dept") || "";
+  <<script>
+  const params = new URLSearchParams(window.location.search);
+  const dept = params.get("dept") || "";
 
-    // แสดงข้อมูลแผนก
-    document.getElementById("deptInfo").innerText = "แผนก: " + (dept || "-");
+  // แสดงข้อมูลแผนก
+  document.getElementById("deptInfo").innerText = "แผนก: " + (dept || "-");
 
-    // Login function
-    function loginUser() {
-      const username = document.getElementById("usernameInput").value.trim();
-      const password = document.getElementById("passwordInput").value.trim();
+  // Login function
+  function loginUser() {
+    const username = document.getElementById("usernameInput").value.trim();
+    const password = document.getElementById("passwordInput").value.trim();
 
-      if (!username) {
-        alert("⚠️ กรุณากรอกชื่อผู้ใช้");
-        return;
-      }
-
-      if (!password) {
-        alert("⚠️ กรุณากรอกรหัสผ่าน");
-        return;
-      }
-
-      // เก็บ login session
-      localStorage.setItem("user_login", JSON.stringify({ username, dept, role: "employee" }));
-
-      // ไปหน้า Dashboard
-      window.location.href =
-        "dashboard.html?dept=" +
-        encodeURIComponent(dept) +
-        "&user=" +
-        encodeURIComponent(username);
+    if (!username) {
+      alert("⚠️ กรุณากรอกชื่อผู้ใช้");
+      return;
     }
 
-    // ไปหน้า Admin login
-    function goAdmin() {
+    if (!password) {
+      alert("⚠️ กรุณากรอกรหัสผ่าน");
+      return;
+    }
+
+    // เก็บ login session
+    localStorage.setItem("user_login", JSON.stringify({ username, dept, role: "employee" }));
+
+    // ไปหน้า Dashboard
+    window.location.href =
+      "dashboard.html?dept=" +
+      encodeURIComponent(dept) +
+      "&user=" +
+      encodeURIComponent(username);
+  }
+
+  // ไปหน้า Admin login (มีระบบถามรหัสผ่าน)
+  function goAdmin() {
+    const adminPass = "1234";   // <<===== รหัสผ่าน Admin ตั้งตรงนี้
+    const pass = prompt("กรอกรหัสผ่านสำหรับผู้ดูแลระบบ:");
+
+    if (pass === null) return; // กดยกเลิก
+
+    if (pass === adminPass) {
       window.location.href = "admin-login.html?dept=" + encodeURIComponent(dept);
+    } else {
+      alert("❌ รหัสผ่านไม่ถูกต้อง");
     }
-  </script>
+  }
+</script>
 
   <!-- Fallback CSS (กัน error กรณีไม่มีบางคลาสใน styles.css) -->
   <style>
