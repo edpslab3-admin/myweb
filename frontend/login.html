@@ -61,56 +61,74 @@
   </div>
 
   <!-- Script -->
-  <script>
-    const params = new URLSearchParams(window.location.search);
-    const dept = params.get("dept") || "";
+<script>
+  const params = new URLSearchParams(window.location.search);
+  const dept = params.get("dept") || "";
 
-    // แสดงข้อมูลแผนก
-    document.getElementById("deptInfo").innerText = "แผนก: " + (dept || "-");
+  // แสดงแผนก
+  document.getElementById("deptInfo").innerText = "แผนก: " + (dept || "-");
 
-    // Login function
-    function loginUser() {
-      const username = document.getElementById("usernameInput").value.trim();
-      const password = document.getElementById("passwordInput").value.trim();
+  // 🔐 รายชื่อผู้ใช้ + รหัสผ่านแบบแยกคน
+  const users = {
+    "user1": "1111",
+    "user2": "2222",
+    "user3": "3333",
+    "user4": "4444",
+    "user5": "5555",
+    "user6": "6666"
+  };
 
-      if (!username) {
-        alert("⚠️ กรุณากรอกชื่อผู้ใช้");
-        return;
-      }
+  // ⭐ ฟังก์ชันเข้าสู่ระบบแบบเช็กชื่อ + รหัสจริง
+  function loginUser() {
+    const username = document.getElementById("usernameInput").value.trim();
+    const password = document.getElementById("passwordInput").value.trim();
 
-      if (!password) {
-        alert("⚠️ กรุณากรอกรหัสผ่าน");
-        return;
-      }
+    if (!username) return alert("⚠️ กรุณากรอกชื่อผู้ใช้");
+    if (!password) return alert("⚠️ กรุณากรอกรหัสผ่าน");
 
-      localStorage.setItem("user_login", JSON.stringify({ username, dept, role: "employee" }));
-
-      window.location.href =
-        "dashboard.html?dept=" +
-        encodeURIComponent(dept) +
-        "&user=" +
-        encodeURIComponent(username);
+    // ตรวจสอบ user + password
+    if (!users[username]) {
+      alert("❌ ไม่พบบัญชีนี้");
+      return;
     }
 
-    // Admin login
-    function goAdmin() {
-      const adminPass = "1234";
-      const pass = prompt("กรอกรหัสผ่านสำหรับผู้ดูแลระบบ:");
-      if (pass === null) return;
-
-      if (pass === adminPass) {
-        window.location.href = "admin-login.html?dept=" + encodeURIComponent(dept);
-      } else {
-        alert("❌ รหัสผ่านไม่ถูกต้อง");
-      }
+    if (users[username] !== password) {
+      alert("❌ รหัสผ่านผิด");
+      return;
     }
 
-    // Logout → กลับไปหน้าแรก (แก้ชื่อไฟล์ตามหน้าเมนู 3 อัน)
-    function logout() {
-      localStorage.clear();
-      window.location.href = "index.html";  // ← เปลี่ยนได้หากหน้าแรกชื่ออื่น
+    // บันทึก session
+    localStorage.setItem("user_login",
+      JSON.stringify({ username, dept, role: "employee" })
+    );
+
+    // ไปหน้า dashboard
+    window.location.href =
+      "dashboard.html?dept=" +
+      encodeURIComponent(dept) +
+      "&user=" +
+      encodeURIComponent(username);
+  }
+
+  // ⭐ Admin login
+  function goAdmin() {
+    const adminPass = "1234";
+    const pass = prompt("กรอกรหัสผ่านสำหรับผู้ดูแลระบบ:");
+    if (pass === null) return;
+
+    if (pass === adminPass) {
+      window.location.href = "admin-login.html?dept=" + encodeURIComponent(dept);
+    } else {
+      alert("❌ รหัสผ่านไม่ถูกต้อง");
     }
-  </script>
+  }
+
+  // ⭐ ปุ่มออกจากระบบ
+  function logout() {
+    localStorage.clear();
+    window.location.href = "index.html";
+  }
+</script>>
 
   <!-- Fallback CSS -->
   <style>
