@@ -6,9 +6,21 @@
 <link rel="stylesheet" href="styles.css">
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+<style>
+  body{font-family:sans-serif; background:#f0f2f5; margin:0; padding:20px}
+  .container{max-width:1200px; margin:auto}
+  .header{display:flex; gap:16px; align-items:center; margin-bottom:20px}
+  .logo{font-weight:bold; font-size:24px; color:var(--blue,#007bff)}
+  .small{font-size:14px; color:#555}
+  .card{background:white; padding:16px; border-radius:8px; margin-bottom:20px; box-shadow:0 2px 8px rgba(0,0,0,0.1)}
+  .table{width:100%; border-collapse:collapse}
+  .table th, .table td{border:1px solid #ddd; padding:8px; text-align:center}
+  .btn{padding:6px 12px; background:#007bff; color:white; border:none; border-radius:4px; cursor:pointer}
+  .btn:hover{background:#0056b3}
+</style>
 </head>
-<body>
-<div class="container">  <div class="header">
+<body><div class="container">
+  <div class="header">
     <div class="logo">EP</div>
     <div>
       <h2 style="margin:0; color:var(--blue)">Dashboard</h2>
@@ -42,12 +54,13 @@
       <div style="flex:1; min-width:300px"><canvas id="chartWeek"></canvas></div>
       <div style="flex:1; min-width:300px"><canvas id="chartMonth"></canvas></div>
     </div>
-  </div></div><button id="logoutBtn" style="position:fixed; top:20px; right:20px; padding:10px 20px; background:#d9534f; color:white; border:none; border-radius:6px; cursor:pointer;">ออกจากระบบ</button>
+  </div>
+</div><button id="logoutBtn" style="position:fixed; top:20px; right:20px; padding:10px 20px; background:#d9534f; color:white; border:none; border-radius:6px; cursor:pointer;">ออกจากระบบ</button>
 
 <script>
-// ---------- ตั้งค่าแผนก ----------
+// ---------- ข้อมูลพนักงาน ----------
 const employeesDB = {
-"เช็ค100% กะ1": [
+"เช็ค100% กะ1":[
 { "id":1, "name":"อนุชา ร้อยเส้น", "position":"Operator" },
 { "id":2, "name":"ศิวะพงษ์ บุญมาก", "position":"Supervisor" },
 { "id":3, "name":"ภาณุวัฒน์ จันทรา", "position":"Operator" },
@@ -69,7 +82,7 @@ const employeesDB = {
 { "id":19, "name":"ปิยวัฒน์ ศรีสุข", "position":"Operator" },
 { "id":20, "name":"ดนัย ปัญญา", "position":"Operator" }
 ],
-"เช็ค100% กะ2": [
+"เช็ค100% กะ2":[
 { "id":1, "name":"สุริยา ดวงทอง", "position":"Operator" },
 { "id":2, "name":"ธีรพงษ์ คำดี", "position":"Operator" },
 { "id":3, "name":"วรเมธ ใจแกร่ง", "position":"Operator" },
@@ -91,7 +104,7 @@ const employeesDB = {
 { "id":19, "name":"สมปอง ปักเชือก", "position":"Operator" },
 { "id":20, "name":"สุริยา ดวงทอง", "position":"Operator" }
 ],
-"แพ็คกิ้ง": [
+"แพ็คกิ้ง":[
 { "id":1, "name":"ภาณุวัฒน์ จันทรา", "position":"Operator" },
 { "id":2, "name":"สมปอง ปักเชือก", "position":"Operator" },
 { "id":3, "name":"สุริยา ดวงทอง", "position":"Operator" },
@@ -113,7 +126,7 @@ const employeesDB = {
 { "id":19, "name":"อนุชา ร้อยเส้น", "position":"Operator" },
 { "id":20, "name":"ศิวะพงษ์ บุญมาก", "position":"Supervisor" }
 ],
-"ผลิต": [
+"ผลิต":[
 { "id":1, "name":"ธีรพงษ์ คำดี", "position":"Operator" },
 { "id":2, "name":"วรเมธ ใจแกร่ง", "position":"Operator" },
 { "id":3, "name":"พิชัย อารีย์", "position":"Operator" },
@@ -137,11 +150,10 @@ const employeesDB = {
 ]
 };
 
-// ---------- กำหนดแผนกจาก URL ----------
+// ---------- แผนกจาก URL ----------
 let dept = new URLSearchParams(location.search).get("dept") || "เช็ค100% กะ1";
 const user = new URLSearchParams(location.search).get("user") || "user1";
 if(!employeesDB[dept]) dept="เช็ค100% กะ1";
-
 document.getElementById("meta").innerText = "แผนก: " + dept + " | ผู้ใช้: " + user;
 document.getElementById("titleDept").innerText = "เช็คชื่อ (" + dept + ")";
 
@@ -193,7 +205,7 @@ function collectRecords(){
   });
 }
 
-// ---------- บันทึกใน localStorage ----------
+// ---------- บันทึก ----------
 document.getElementById("saveBtn").addEventListener("click", ()=>{
   const records=collectRecords();
   const date=new Date().toISOString().slice(0,10);
@@ -205,14 +217,24 @@ document.getElementById("saveBtn").addEventListener("click", ()=>{
   buildCharts();
 });
 
-// ---------- Export Excel แยกแผนก ----------
+// ---------- Export Excel ----------
 document.getElementById("xlsBtn").addEventListener("click", ()=>{
   const all=JSON.parse(localStorage.getItem("attendance_all")||"{}");
   const wb=XLSX.utils.book_new();
   Object.entries(all).forEach(([date,depts])=>{
     if(!depts[dept]) return;
     const records = depts[dept].map(r=>{
-      return {...r,date,dept,totalAM:r.am?1:0,totalOT:r.ot?1:0,totalAbsent:r.absent?1:0};
+      return {
+        วันที่: date,
+        แผนก: dept,
+        ชื่อ: r.name,
+        ตำแหน่ง: r.position,
+        เช้า: r.am ? "มา" : "-",
+        OT: r.ot ? "ทำ OT" : "-",
+        ไม่มา: r.absent ? "ไม่มา" : "-",
+        ประเภทลา: r.leave || "-",
+        หมายเหตุ: r.note || "-"
+      };
     });
     const ws=XLSX.utils.json_to_sheet(records);
     XLSX.utils.book_append_sheet(wb,ws,`${dept}_${date}`);
@@ -220,29 +242,20 @@ document.getElementById("xlsBtn").addEventListener("click", ()=>{
   XLSX.writeFile(wb,"attendance.xlsx");
 });
 
-// ---------- สรุปและกราฟ ----------
+// ---------- กราฟ ----------
 let charts = [];
 function buildCharts(){
   const all=JSON.parse(localStorage.getItem("attendance_all")||"{}");
   const today=new Date().toISOString().slice(0,10);
   const todayRecords=(all[today]&&all[today][dept])||[];
 
-  // ---------- สรุปวันนี้ ----------
-  const presentCount = todayRecords.filter(r=>r.am || r.ot).length;
+  const presentCount = todayRecords.filter(r=>r.am||r.ot).length;
   const absentCount = todayRecords.filter(r=>r.absent).length;
-  const summaryHTML=`<b>วันนี้มา:</b> ${presentCount} คน | <b>ไม่มา:</b> ${absentCount} คน`;
-  document.getElementById("summaryToday").innerHTML=summaryHTML;
+  document.getElementById("summaryToday").innerHTML=`<b>วันนี้มา:</b> ${presentCount} คน | <b>ไม่มา:</b> ${absentCount} คน`;
 
-  // ---------- กราฟรายวัน ----------
   buildBarChart("chartDay",todayRecords);
-
-  // ---------- กราฟรายสัปดาห์ ----------
-  const weekSummary=summarizePeriod(all,7);
-  buildSummaryChart("chartWeek",weekSummary);
-
-  // ---------- กราฟรายเดือน ----------
-  const monthSummary=summarizePeriod(all,30);
-  buildSummaryChart("chartMonth",monthSummary);
+  buildSummaryChart("chartWeek",summarizePeriod(all,7));
+  buildSummaryChart("chartMonth",summarizePeriod(all,30));
 }
 
 function summarizePeriod(allData,days){
@@ -253,56 +266,4 @@ function summarizePeriod(allData,days){
     if(!depts[dept]) return;
     depts[dept].forEach(r=>{
       if(!summary[r.name]) summary[r.name]={am:0,ot:0,absent:0};
-      if(r.am) summary[r.name].am++;
-      if(r.ot) summary[r.name].ot++;
-      if(r.absent) summary[r.name].absent++;
-    });
-  });
-  return summary;
-}
-
-function buildBarChart(canvasId,records){
-  if(charts[canvasId]) charts[canvasId].destroy();
-  const labels=records.map(r=>r.name);
-  const amData=records.map(r=>r.am?1:0);
-  const otData=records.map(r=>r.ot?1:0);
-  const absentData=records.map(r=>r.absent?1:0);
-  charts[canvasId]=new Chart(document.getElementById(canvasId),{
-    type:'bar',
-    data:{labels,datasets:[
-      {label:'AM',data:amData,backgroundColor:'rgba(54,162,235,0.7)'},
-      {label:'OT',data:otData,backgroundColor:'rgba(75,192,192,0.7)'},
-      {label:'Absent',data:absentData,backgroundColor:'rgba(255,99,132,0.7)'}
-    ]},
-    options:{responsive:true,scales:{y:{beginAtZero:true}}}
-  });
-}
-
-function buildSummaryChart(canvasId,summary){
-  if(charts[canvasId]) charts[canvasId].destroy();
-  const labels=Object.keys(summary);
-  const amData=labels.map(n=>summary[n].am);
-  const otData=labels.map(n=>summary[n].ot);
-  const absentData=labels.map(n=>summary[n].absent);
-  charts[canvasId]=new Chart(document.getElementById(canvasId),{
-    type:'bar',
-    data:{labels,datasets:[
-      {label:'AM',data:amData,backgroundColor:'rgba(54,162,235,0.7)'},
-      {label:'OT',data:otData,backgroundColor:'rgba(75,192,192,0.7)'},
-      {label:'Absent',data:absentData,backgroundColor:'rgba(255,99,132,0.7)'}
-    ]},
-    options:{responsive:true,scales:{y:{beginAtZero:true}}}
-  });
-}
-
-// ---------- โหลดหน้า ----------
-buildTable();
-buildCharts();
-
-// ---------- Logout ----------
-document.getElementById("logoutBtn").addEventListener("click",()=>{
-  localStorage.removeItem("user_login");
-  window.location.href="index.html";
-});
-</script></body>
-</html>
+      if(r.am) summary[r.name
