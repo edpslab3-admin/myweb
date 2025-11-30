@@ -1,17 +1,103 @@
 <!doctype html>
 <html lang="th">
-<head><meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>Enterprise PRO - เลือกแผนก</title><link rel="stylesheet" href="styles.css"></head>
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Enterprise PRO - เลือกแผนก</title>
+
+  <link rel="stylesheet" href="styles.css" />
+</head>
+
 <body>
-<div class="container">
-  <div class="header"><div class="logo">EDP</div>
-  <div><h2 style="margin:0;color:var(--blue)">EElectro Deposition Painting EDP</h2><div class="small">ระบบเช็คชื่อ</div></div></div>
-  <div class="card"><h3>เลือกแผนก</h3><div class="dept-grid">
-    <div class="dept" onclick="choose('check100')"><div style="font-size:18px;font-weight:700">เช็ค100%</div><div class="small">แผนกตรวจรับ</div></div>
-    <div class="dept" onclick="choose('packing')"><div style="font-size:18px;font-weight:700">แพ็คกิ้ง</div><div class="small">แผนกแพ็คสินค้า</div></div>
-    <div class="dept" onclick="choose('loading')"><div style="font-size:18px;font-weight:700">โหลด / อันโหลด</div><div class="small">แผนกขนส่ง</div></div>
-  </div></div>
-  <div class="card small footer">Demo bundle — frontend connects to backend API at <code>/api</code>. See README.</div>
-</div>
-<script>function choose(d){ location.href='login.html?dept='+d }</script>
-</body></html>
+
+  <div class="container">
+
+    <!-- Header -->
+    <div class="header">
+      <div class="logo">EDP</div>
+      <div>
+        <h2 style="margin:0; color:var(--blue)">
+          Electro Deposition Painting (EDP)
+        </h2>
+        <div class="small">ระบบเช็คชื่อ</div>
+      </div>
+    </div>
+
+    <!-- Department Selection -->
+    <div class="card">
+      <h3>เลือกแผนก</h3>
+
+      <div class="dept-grid">
+        <div class="dept" onclick="chooseDept('check100')">
+          <div class="dept-title">เช็ค 100%</div>
+          <div class="small">แผนกตรวจรับสินค้า</div>
+        </div>
+
+        <div class="dept" onclick="chooseDept('packing')">
+          <div class="dept-title">แพ็คกิ้ง</div>
+          <div class="small">แผนกแพ็คสินค้า</div>
+        </div>
+
+        <div class="dept" onclick="chooseDept('loading')">
+          <div class="dept-title">โหลด / อันโหลด</div>
+          <div class="small">แผนกขนส่ง</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="card small footer">
+      Demo bundle — frontend เชื่อมต่อ Backend API ที่ <code>/api</code>
+    </div>
+
+  </div>
+
+  <!-- Script -->
+  <script>
+    function chooseDept(dept) {
+      if (!dept) {
+        alert("⚠️ กรุณาเลือกแผนก");
+        return;
+      }
+      window.location.href = "login.html?dept=" + encodeURIComponent(dept);
+    }
+  </script>
+
+  <style>
+    /* กัน error กรณีไม่มีใน styles.css */
+    .dept-title {
+      font-size: 18px;
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+
+    .dept-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 12px;
+      margin-top: 8px;
+    }
+
+    .dept {
+      padding: 12px;
+      border: 2px solid var(--blue);
+      border-radius: 8px;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+
+    .dept:hover {
+      transform: translateY(-3px);
+      opacity: 0.85;
+    }
+
+    .footer {
+      text-align: center;
+      margin-top: 16px;
+      padding: 10px;
+    }
+  </style>
+
+</body>
+</html>
