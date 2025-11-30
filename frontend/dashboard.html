@@ -6,21 +6,9 @@
 <link rel="stylesheet" href="styles.css">
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
-<style>
-  body{font-family:sans-serif; background:#f0f2f5; margin:0; padding:20px}
-  .container{max-width:1200px; margin:auto}
-  .header{display:flex; gap:16px; align-items:center; margin-bottom:20px}
-  .logo{font-weight:bold; font-size:24px; color:var(--blue,#007bff)}
-  .small{font-size:14px; color:#555}
-  .card{background:white; padding:16px; border-radius:8px; margin-bottom:20px; box-shadow:0 2px 8px rgba(0,0,0,0.1)}
-  .table{width:100%; border-collapse:collapse}
-  .table th, .table td{border:1px solid #ddd; padding:8px; text-align:center}
-  .btn{padding:6px 12px; background:#007bff; color:white; border:none; border-radius:4px; cursor:pointer}
-  .btn:hover{background:#0056b3}
-</style>
 </head>
-<body><div class="container">
-  <div class="header">
+<body>
+<div class="container">  <div class="header">
     <div class="logo">EP</div>
     <div>
       <h2 style="margin:0; color:var(--blue)">Dashboard</h2>
@@ -54,106 +42,22 @@
       <div style="flex:1; min-width:300px"><canvas id="chartWeek"></canvas></div>
       <div style="flex:1; min-width:300px"><canvas id="chartMonth"></canvas></div>
     </div>
-  </div>
-</div><button id="logoutBtn" style="position:fixed; top:20px; right:20px; padding:10px 20px; background:#d9534f; color:white; border:none; border-radius:6px; cursor:pointer;">ออกจากระบบ</button>
+  </div></div><button id="logoutBtn" style="position:fixed; top:20px; right:20px; padding:10px 20px; background:#d9534f; color:white; border:none; border-radius:6px; cursor:pointer;">ออกจากระบบ</button>
 
 <script>
-// ---------- ข้อมูลพนักงาน ----------
+// ---------- ตั้งค่าแผนก ----------
 const employeesDB = {
-"เช็ค100% กะ1":[
-{ "id":1, "name":"อนุชา ร้อยเส้น", "position":"Operator" },
-{ "id":2, "name":"ศิวะพงษ์ บุญมาก", "position":"Supervisor" },
-{ "id":3, "name":"ภาณุวัฒน์ จันทรา", "position":"Operator" },
-{ "id":4, "name":"สมปอง ปักเชือก", "position":"Operator" },
-{ "id":5, "name":"สุริยา ดวงทอง", "position":"Operator" },
-{ "id":6, "name":"นรินทร์ มั่นดี", "position":"Operator" },
-{ "id":7, "name":"ธีรพงษ์ คำดี", "position":"Operator" },
-{ "id":8, "name":"วรเมธ ใจแกร่ง", "position":"Operator" },
-{ "id":9, "name":"พิชัย อารีย์", "position":"Operator" },
-{ "id":10, "name":"ศุภชัย นิ่มนวล", "position":"Operator" },
-{ "id":11, "name":"อดิเรก พูนศักดิ์", "position":"Operator" },
-{ "id":12, "name":"ธนดล ใจบุญ", "position":"Operator" },
-{ "id":13, "name":"สุทธิพงษ์ ศักดิ์ชัย", "position":"Operator" },
-{ "id":14, "name":"เจษฎา คงทน", "position":"Operator" },
-{ "id":15, "name":"จิรภัทร ทองแท้", "position":"Operator" },
-{ "id":16, "name":"วีรภัทร ดวงดี", "position":"Operator" },
-{ "id":17, "name":"ภาณุเดช แซ่ตั้ง", "position":"Operator" },
-{ "id":18, "name":"ชานนท์ จันทรวงศ์", "position":"Operator" },
-{ "id":19, "name":"ปิยวัฒน์ ศรีสุข", "position":"Operator" },
-{ "id":20, "name":"ดนัย ปัญญา", "position":"Operator" }
-],
-"เช็ค100% กะ2":[
-{ "id":1, "name":"สุริยา ดวงทอง", "position":"Operator" },
-{ "id":2, "name":"ธีรพงษ์ คำดี", "position":"Operator" },
-{ "id":3, "name":"วรเมธ ใจแกร่ง", "position":"Operator" },
-{ "id":4, "name":"พิชัย อารีย์", "position":"Operator" },
-{ "id":5, "name":"ศุภชัย นิ่มนวล", "position":"Operator" },
-{ "id":6, "name":"อดิเรก พูนศักดิ์", "position":"Operator" },
-{ "id":7, "name":"ธนดล ใจบุญ", "position":"Operator" },
-{ "id":8, "name":"สุทธิพงษ์ ศักดิ์ชัย", "position":"Operator" },
-{ "id":9, "name":"เจษฎา คงทน", "position":"Operator" },
-{ "id":10, "name":"จิรภัทร ทองแท้", "position":"Operator" },
-{ "id":11, "name":"วีรภัทร ดวงดี", "position":"Operator" },
-{ "id":12, "name":"ภาณุเดช แซ่ตั้ง", "position":"Operator" },
-{ "id":13, "name":"ชานนท์ จันทรวงศ์", "position":"Operator" },
-{ "id":14, "name":"ปิยวัฒน์ ศรีสุข", "position":"Operator" },
-{ "id":15, "name":"ดนัย ปัญญา", "position":"Operator" },
-{ "id":16, "name":"อนุชา ร้อยเส้น", "position":"Operator" },
-{ "id":17, "name":"ศิวะพงษ์ บุญมาก", "position":"Supervisor" },
-{ "id":18, "name":"ภาณุวัฒน์ จันทรา", "position":"Operator" },
-{ "id":19, "name":"สมปอง ปักเชือก", "position":"Operator" },
-{ "id":20, "name":"สุริยา ดวงทอง", "position":"Operator" }
-],
-"แพ็คกิ้ง":[
-{ "id":1, "name":"ภาณุวัฒน์ จันทรา", "position":"Operator" },
-{ "id":2, "name":"สมปอง ปักเชือก", "position":"Operator" },
-{ "id":3, "name":"สุริยา ดวงทอง", "position":"Operator" },
-{ "id":4, "name":"นรินทร์ มั่นดี", "position":"Operator" },
-{ "id":5, "name":"ธีรพงษ์ คำดี", "position":"Operator" },
-{ "id":6, "name":"วรเมธ ใจแกร่ง", "position":"Operator" },
-{ "id":7, "name":"พิชัย อารีย์", "position":"Operator" },
-{ "id":8, "name":"ศุภชัย นิ่มนวล", "position":"Operator" },
-{ "id":9, "name":"อดิเรก พูนศักดิ์", "position":"Operator" },
-{ "id":10, "name":"ธนดล ใจบุญ", "position":"Operator" },
-{ "id":11, "name":"สุทธิพงษ์ ศักดิ์ชัย", "position":"Operator" },
-{ "id":12, "name":"เจษฎา คงทน", "position":"Operator" },
-{ "id":13, "name":"จิรภัทร ทองแท้", "position":"Operator" },
-{ "id":14, "name":"วีรภัทร ดวงดี", "position":"Operator" },
-{ "id":15, "name":"ภาณุเดช แซ่ตั้ง", "position":"Operator" },
-{ "id":16, "name":"ชานนท์ จันทรวงศ์", "position":"Operator" },
-{ "id":17, "name":"ปิยวัฒน์ ศรีสุข", "position":"Operator" },
-{ "id":18, "name":"ดนัย ปัญญา", "position":"Operator" },
-{ "id":19, "name":"อนุชา ร้อยเส้น", "position":"Operator" },
-{ "id":20, "name":"ศิวะพงษ์ บุญมาก", "position":"Supervisor" }
-],
-"ผลิต":[
-{ "id":1, "name":"ธีรพงษ์ คำดี", "position":"Operator" },
-{ "id":2, "name":"วรเมธ ใจแกร่ง", "position":"Operator" },
-{ "id":3, "name":"พิชัย อารีย์", "position":"Operator" },
-{ "id":4, "name":"ศุภชัย นิ่มนวล", "position":"Operator" },
-{ "id":5, "name":"อดิเรก พูนศักดิ์", "position":"Operator" },
-{ "id":6, "name":"ธนดล ใจบุญ", "position":"Operator" },
-{ "id":7, "name":"สุทธิพงษ์ ศักดิ์ชัย", "position":"Operator" },
-{ "id":8, "name":"เจษฎา คงทน", "position":"Operator" },
-{ "id":9, "name":"จิรภัทร ทองแท้", "position":"Operator" },
-{ "id":10, "name":"วีรภัทร ดวงดี", "position":"Operator" },
-{ "id":11, "name":"ภาณุเดช แซ่ตั้ง", "position":"Operator" },
-{ "id":12, "name":"ชานนท์ จันทรวงศ์", "position":"Operator" },
-{ "id":13, "name":"ปิยวัฒน์ ศรีสุข", "position":"Operator" },
-{ "id":14, "name":"ดนัย ปัญญา", "position":"Operator" },
-{ "id":15, "name":"อนุชา ร้อยเส้น", "position":"Operator" },
-{ "id":16, "name":"ศิวะพงษ์ บุญมาก", "position":"Supervisor" },
-{ "id":17, "name":"ภาณุวัฒน์ จันทรา", "position":"Operator" },
-{ "id":18, "name":"สมปอง ปักเชือก", "position":"Operator" },
-{ "id":19, "name":"สุริยา ดวงทอง", "position":"Operator" },
-{ "id":20, "name":"นรินทร์ มั่นดี", "position":"Operator" }
-]
+  "เช็ค100% กะ1": Array.from({length:20},(_,i)=>({id:i+1,name:`พนักงาน1-${i+1}`,position:"พนักงาน"})),
+  "เช็ค100% กะ2": Array.from({length:20},(_,i)=>({id:i+1,name:`พนักงาน2-${i+1}`,position:"พนักงาน"})),
+  "แพ็คกิ้ง": Array.from({length:20},(_,i)=>({id:i+1,name:`แพ็คกิ้ง-${i+1}`,position:"พนักงาน"})),
+  "ผลิต": Array.from({length:20},(_,i)=>({id:i+1,name:`ผลิต-${i+1}`,position:"พนักงาน"}))
 };
 
-// ---------- แผนกจาก URL ----------
+// ---------- กำหนดแผนกจาก URL ----------
 let dept = new URLSearchParams(location.search).get("dept") || "เช็ค100% กะ1";
 const user = new URLSearchParams(location.search).get("user") || "user1";
 if(!employeesDB[dept]) dept="เช็ค100% กะ1";
+
 document.getElementById("meta").innerText = "แผนก: " + dept + " | ผู้ใช้: " + user;
 document.getElementById("titleDept").innerText = "เช็คชื่อ (" + dept + ")";
 
@@ -205,7 +109,7 @@ function collectRecords(){
   });
 }
 
-// ---------- บันทึก ----------
+// ---------- บันทึกใน localStorage ----------
 document.getElementById("saveBtn").addEventListener("click", ()=>{
   const records=collectRecords();
   const date=new Date().toISOString().slice(0,10);
@@ -217,24 +121,14 @@ document.getElementById("saveBtn").addEventListener("click", ()=>{
   buildCharts();
 });
 
-// ---------- Export Excel ----------
+// ---------- Export Excel แยกแผนก ----------
 document.getElementById("xlsBtn").addEventListener("click", ()=>{
   const all=JSON.parse(localStorage.getItem("attendance_all")||"{}");
   const wb=XLSX.utils.book_new();
   Object.entries(all).forEach(([date,depts])=>{
     if(!depts[dept]) return;
     const records = depts[dept].map(r=>{
-      return {
-        วันที่: date,
-        แผนก: dept,
-        ชื่อ: r.name,
-        ตำแหน่ง: r.position,
-        เช้า: r.am ? "มา" : "-",
-        OT: r.ot ? "ทำ OT" : "-",
-        ไม่มา: r.absent ? "ไม่มา" : "-",
-        ประเภทลา: r.leave || "-",
-        หมายเหตุ: r.note || "-"
-      };
+      return {...r,date,dept,totalAM:r.am?1:0,totalOT:r.ot?1:0,totalAbsent:r.absent?1:0};
     });
     const ws=XLSX.utils.json_to_sheet(records);
     XLSX.utils.book_append_sheet(wb,ws,`${dept}_${date}`);
@@ -242,20 +136,29 @@ document.getElementById("xlsBtn").addEventListener("click", ()=>{
   XLSX.writeFile(wb,"attendance.xlsx");
 });
 
-// ---------- กราฟ ----------
+// ---------- สรุปและกราฟ ----------
 let charts = [];
 function buildCharts(){
   const all=JSON.parse(localStorage.getItem("attendance_all")||"{}");
   const today=new Date().toISOString().slice(0,10);
   const todayRecords=(all[today]&&all[today][dept])||[];
 
-  const presentCount = todayRecords.filter(r=>r.am||r.ot).length;
+  // ---------- สรุปวันนี้ ----------
+  const presentCount = todayRecords.filter(r=>r.am || r.ot).length;
   const absentCount = todayRecords.filter(r=>r.absent).length;
-  document.getElementById("summaryToday").innerHTML=`<b>วันนี้มา:</b> ${presentCount} คน | <b>ไม่มา:</b> ${absentCount} คน`;
+  const summaryHTML=`<b>วันนี้มา:</b> ${presentCount} คน | <b>ไม่มา:</b> ${absentCount} คน`;
+  document.getElementById("summaryToday").innerHTML=summaryHTML;
 
+  // ---------- กราฟรายวัน ----------
   buildBarChart("chartDay",todayRecords);
-  buildSummaryChart("chartWeek",summarizePeriod(all,7));
-  buildSummaryChart("chartMonth",summarizePeriod(all,30));
+
+  // ---------- กราฟรายสัปดาห์ ----------
+  const weekSummary=summarizePeriod(all,7);
+  buildSummaryChart("chartWeek",weekSummary);
+
+  // ---------- กราฟรายเดือน ----------
+  const monthSummary=summarizePeriod(all,30);
+  buildSummaryChart("chartMonth",monthSummary);
 }
 
 function summarizePeriod(allData,days){
@@ -266,4 +169,56 @@ function summarizePeriod(allData,days){
     if(!depts[dept]) return;
     depts[dept].forEach(r=>{
       if(!summary[r.name]) summary[r.name]={am:0,ot:0,absent:0};
-      if(r.am) summary[r.name
+      if(r.am) summary[r.name].am++;
+      if(r.ot) summary[r.name].ot++;
+      if(r.absent) summary[r.name].absent++;
+    });
+  });
+  return summary;
+}
+
+function buildBarChart(canvasId,records){
+  if(charts[canvasId]) charts[canvasId].destroy();
+  const labels=records.map(r=>r.name);
+  const amData=records.map(r=>r.am?1:0);
+  const otData=records.map(r=>r.ot?1:0);
+  const absentData=records.map(r=>r.absent?1:0);
+  charts[canvasId]=new Chart(document.getElementById(canvasId),{
+    type:'bar',
+    data:{labels,datasets:[
+      {label:'AM',data:amData,backgroundColor:'rgba(54,162,235,0.7)'},
+      {label:'OT',data:otData,backgroundColor:'rgba(75,192,192,0.7)'},
+      {label:'Absent',data:absentData,backgroundColor:'rgba(255,99,132,0.7)'}
+    ]},
+    options:{responsive:true,scales:{y:{beginAtZero:true}}}
+  });
+}
+
+function buildSummaryChart(canvasId,summary){
+  if(charts[canvasId]) charts[canvasId].destroy();
+  const labels=Object.keys(summary);
+  const amData=labels.map(n=>summary[n].am);
+  const otData=labels.map(n=>summary[n].ot);
+  const absentData=labels.map(n=>summary[n].absent);
+  charts[canvasId]=new Chart(document.getElementById(canvasId),{
+    type:'bar',
+    data:{labels,datasets:[
+      {label:'AM',data:amData,backgroundColor:'rgba(54,162,235,0.7)'},
+      {label:'OT',data:otData,backgroundColor:'rgba(75,192,192,0.7)'},
+      {label:'Absent',data:absentData,backgroundColor:'rgba(255,99,132,0.7)'}
+    ]},
+    options:{responsive:true,scales:{y:{beginAtZero:true}}}
+  });
+}
+
+// ---------- โหลดหน้า ----------
+buildTable();
+buildCharts();
+
+// ---------- Logout ----------
+document.getElementById("logoutBtn").addEventListener("click",()=>{
+  localStorage.removeItem("user_login");
+  window.location.href="index.html";
+});
+</script></body>
+</html>
