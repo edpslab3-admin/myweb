@@ -16,6 +16,7 @@
     </div>
   </div>  <div class="card">
     <h3 id="titleDept"></h3>
+    <div id="summaryToday" style="margin-bottom:12px"></div>
     <table class="table" id="attTable">
       <thead>
         <tr>
@@ -120,37 +121,46 @@ document.getElementById("saveBtn").addEventListener("click", ()=>{
   buildCharts();
 });
 
-// ---------- Export Excel ----------
+// ---------- Export Excel แยกแผนก ----------
 document.getElementById("xlsBtn").addEventListener("click", ()=>{
   const all=JSON.parse(localStorage.getItem("attendance_all")||"{}");
   const wb=XLSX.utils.book_new();
   Object.entries(all).forEach(([date,depts])=>{
-    Object.entries(depts).forEach(([d,records])=>{
-      const data = records.map(r=>{
-        return {...r,date,dept:d,totalAM:r.am?1:0,totalOT:r.ot?1:0,totalAbsent:r.absent?1:0};
-      });
-      const ws=XLSX.utils.json_to_sheet(data);
-      XLSX.utils.book_append_sheet(wb,ws,`${d}_${date}`);
+    if(!depts[dept]) return;
+    const records = depts[dept].map(r=>{
+      return {...r,date,dept,totalAM:r.am?1:0,totalOT:r.ot?1:0,totalAbsent:r.absent?1:0};
     });
+    const ws=XLSX.utils.json_to_sheet(records);
+    XLSX.utils.book_append_sheet(wb,ws,`${dept}_${date}`);
   });
   XLSX.writeFile(wb,"attendance.xlsx");
 });
 
-// ---------- สร้างกราฟ ----------
+// ---------- สรุปและกราฟ ----------
 let charts = [];
 function buildCharts(){
   const all=JSON.parse(localStorage.getItem("attendance_all")||"{}");
-
   const today=new Date().toISOString().slice(0,10);
   const todayRecords=(all[today]&&all[today][dept])||[];
+
+  // ---------- สรุปวันนี้ ----------
+  const presentCount = todayRecords.filter(r=>r.am || r.ot).length;
+  const absentCount = todayRecords.filter(r=>r.absent).length;
+  const summaryHTML=`<b>วันนี้มา:</b> ${presentCount} คน | <b>ไม่มา:</b> ${absentCount} คน`;
+  document.getElementById("summaryToday").innerHTML=summaryHTML;
+
+  // ---------- กราฟรายวัน ----------
   buildBarChart("chartDay",todayRecords);
 
+  // ---------- กราฟรายสัปดาห์ ----------
   const weekSummary=summarizePeriod(all,7);
   buildSummaryChart("chartWeek",weekSummary);
 
+  // ---------- กราฟรายเดือน ----------
   const monthSummary=summarizePeriod(all,30);
   buildSummaryChart("chartMonth",monthSummary);
 }
+
 function summarizePeriod(allData,days){
   const summary={};
   const dates=Object.keys(allData).sort().slice(-days);
@@ -166,6 +176,7 @@ function summarizePeriod(allData,days){
   });
   return summary;
 }
+
 function buildBarChart(canvasId,records){
   if(charts[canvasId]) charts[canvasId].destroy();
   const labels=records.map(r=>r.name);
@@ -182,6 +193,7 @@ function buildBarChart(canvasId,records){
     options:{responsive:true,scales:{y:{beginAtZero:true}}}
   });
 }
+
 function buildSummaryChart(canvasId,summary){
   if(charts[canvasId]) charts[canvasId].destroy();
   const labels=Object.keys(summary);
