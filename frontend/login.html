@@ -1,27 +1,7 @@
-
 <!doctype html><html lang="th"><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/><title>Login</title><link rel="stylesheet" href="styles.css"></head><body>
-<div class="container">
-  <div class="card" style="max-width:520px;margin:20px auto">
-    <h3>เข้าสู่ระบบ (พนักงาน)</h3>
-    <div class="small" id="deptInfo"></div>
-    <div style="margin-top:12px">
-      <input id="user" class="input" placeholder="ชื่อผู้ใช้ (user1..user6)"/>
-      <input id="pass" class="input" placeholder="รหัสผ่าน (1111..6666)" type="password" style="margin-top:8px"/>
-      <div style="display:flex;gap:8px;margin-top:12px">
-        <button class="btn" onclick="login()">เข้าสู่ระบบ</button>
-        <button onclick="location.href='admin-login.html'">Admin</button>
-      </div>
-      <div style="margin-top:10px" class="small">บัญชีทดสอบผู้ใช้: user1..user6 รหัส: 1111..6666</div>
-    </div>
-  </div>
-</div>
-<script>
-const p=new URLSearchParams(location.search);
-document.getElementById('deptInfo').innerText = 'แผนก: ' + (p.get('dept') || '');
-function login(){
-  const user=document.getElementById('user').value.trim();
-  if(!user){alert('กรุณากรอกชื่อผู้ใช้');return;}
-  location.href='dashboard.html?dept='+p.get('dept')+'&user='+encodeURIComponent(user);
-}
-</script>
-</body></html>
+<div class="container"><div class="card" style="max-width:520px;margin:20px auto"><h3>เข้าสู่ระบบ (พนักงาน)</h3><div class="small" id="deptInfo"></div><div style="margin-top:12px">
+  <input id="user" class="input" placeholder="ชื่อผู้ใช้ (user1..user6)"/>
+  <input id="pass" class="input" placeholder="รหัสผ่าน" type="password" style="margin-top:8px"/>
+  <div style="display:flex;gap:8px;margin-top:12px"><button class="btn" onclick="login()">เข้าสู่ระบบ</button><button onclick="location.href='admin-login.html'">Admin</button></div>
+  <div style="margin-top:10px" class="small">บัญชีทดสอบ users</div></div></div></div>
+<script>const p=new URLSearchParams(location.search);document.getElementById('deptInfo').innerText='แผนก: '+(p.get('dept')||'');function login(){const user=document.getElementById('user').value.trim();if(!user){alert('กรอก user');return;}location.href='dashboard.html?dept='+p.get('dept')+'&user='+encodeURIComponent(user);}</script></body></html>
