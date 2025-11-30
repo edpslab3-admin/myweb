@@ -1,131 +1,158 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="th">
+
 <head>
-    <meta charset="UTF-8">
-    <title>ระบบเช็คชื่อพนักงาน</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <style>
-        body { font-family: sans-serif; padding: 20px; background: #f5f5f5; }
-        .container { max-width: 600px; margin: auto; background: #fff; padding: 20px; border-radius: 10px; }
-        h2 { text-align: center; }
-        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-        table, th, td { border: 1px solid #ccc; }
-        th, td { padding: 10px; text-align: center; }
-        button { padding: 10px 15px; margin-top: 10px; cursor: pointer; }
-        .admin-box { margin-bottom: 20px; text-align: center; }
-        .green { background: #c8f7c5; }
-        .red { background: #f7c5c5; }
-    </style>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Login</title>
+
+  <link rel="stylesheet" href="styles.css" />
+
+  <style>
+    /* ปุ่มออกจากระบบมุมขวาบน */
+    #logoutBtn {
+      position: absolute;
+      top: 14px;
+      right: 14px;
+      padding: 8px 16px;
+      background: #d9534f;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: 0.2s;
+    }
+    #logoutBtn:hover {
+      opacity: 0.85;
+      transform: translateY(-2px);
+    }
+  </style>
 </head>
+
 <body>
-<div class="container">
 
-    <h2>ระบบเช็คชื่อพนักงาน</h2>
+  <!-- ปุ่มออกจากระบบ -->
+  <button id="logoutBtn" onclick="logout()">ออกจากระบบ</button>
 
-    <!-- กล่องล็อกอินแอดมิน -->
-    <div class="admin-box">
-        <input id="adminCode" type="password" placeholder="รหัสแอดมิน" />
-        <button onclick="loginAdmin()">เข้าสู่ระบบ</button>
-        <p id="adminStatus" style="color: green;"></p>
+  <div class="container">
+
+    <!-- Login Card -->
+    <div class="card" style="max-width:520px; margin:20px auto; padding:20px;">
+      <h3 style="margin-bottom:6px;">เข้าสู่ระบบ (พนักงาน)</h3>
+      <div class="small" id="deptInfo">แผนก: -</div>
+
+      <div style="margin-top:14px;">
+
+        <!-- Inputs -->
+        <input id="usernameInput" class="input" placeholder="ชื่อผู้ใช้ (user1..user6)" />
+        <input id="passwordInput" class="input" type="password" placeholder="รหัสผ่าน" style="margin-top:8px;" />
+
+        <!-- Buttons -->
+        <div style="display:flex; gap:8px; margin-top:14px;">
+          <button class="btn" onclick="loginUser()">เข้าสู่ระบบ</button>
+          <button class="btn" onclick="goAdmin()">Admin</button>
+        </div>
+
+        <div style="margin-top:10px;" class="small">บัญชีทดสอบ users</div>
+      </div>
     </div>
 
-    <!-- ตารางเช็คชื่อ -->
-    <table id="attendanceTable">
-        <thead>
-            <tr>
-                <th>ชื่อพนักงาน</th>
-                <th>สถานะ</th>
-            </tr>
-        </thead>
-        <tbody>
-        </tbody>
-    </table>
+  </div>
 
-    <button onclick="saveData()">บันทึกข้อมูล</button>
+  <!-- Script -->
+  <script>
+    const params = new URLSearchParams(window.location.search);
+    const dept = params.get("dept") || "";
 
-    <h3>สรุปผลการมาทำงาน</h3>
-    <div id="summaryBox"></div>
+    // แสดงข้อมูลแผนก
+    document.getElementById("deptInfo").innerText = "แผนก: " + (dept || "-");
 
-</div>
+    // Login function
+    function loginUser() {
+      const username = document.getElementById("usernameInput").value.trim();
+      const password = document.getElementById("passwordInput").value.trim();
 
+      if (!username) {
+        alert("⚠️ กรุณากรอกชื่อผู้ใช้");
+        return;
+      }
 
-<script>
-    const employees = [
-        "พนักงาน 1","พนักงาน 2","พนักงาน 3","พนักงาน 4",
-        "พนักงาน 5","พนักงาน 6","พนักงาน 7","พนักงาน 8",
-        "พนักงาน 9","พนักงาน 10","พนักงาน 11","พนักงาน 12",
-        "พนักงาน 13","พนักงาน 14","พนักงาน 15","พนักงาน 16",
-    ];
+      if (!password) {
+        alert("⚠️ กรุณากรอกรหัสผ่าน");
+        return;
+      }
 
-    const admins = ["1111","2222","3333","4444","5555","6666"];
-    let isAdmin = false;
+      localStorage.setItem("user_login", JSON.stringify({ username, dept, role: "employee" }));
 
-    function loadTable() {
-        const tbody = document.querySelector("#attendanceTable tbody");
-        tbody.innerHTML = "";
-
-        let saved = JSON.parse(localStorage.getItem("attendanceData") || "{}");
-
-        employees.forEach((name, index) => {
-            const row = document.createElement("tr");
-
-            const status = saved[index] ?? "none";
-
-            row.innerHTML = `
-                <td>${name}</td>
-                <td>
-                    <button onclick="setStatus(${index}, 'มา')" class="${status=='มา'?'green':''}">มา</button>
-                    <button onclick="setStatus(${index}, 'ไม่มา')" class="${status=='ไม่มา'?'red':''}">ไม่มา</button>
-                </td>
-            `;
-
-            tbody.appendChild(row);
-        });
+      window.location.href =
+        "dashboard.html?dept=" +
+        encodeURIComponent(dept) +
+        "&user=" +
+        encodeURIComponent(username);
     }
 
-    function loginAdmin() {
-        const code = document.getElementById("adminCode").value;
-        if (admins.includes(code)) {
-            isAdmin = true;
-            document.getElementById("adminStatus").innerText = "เข้าสู่ระบบสำเร็จ";
-        } else {
-            alert("รหัสไม่ถูกต้อง");
-        }
+    // Admin login
+    function goAdmin() {
+      const adminPass = "1234";
+      const pass = prompt("กรอกรหัสผ่านสำหรับผู้ดูแลระบบ:");
+      if (pass === null) return;
+
+      if (pass === adminPass) {
+        window.location.href = "admin-login.html?dept=" + encodeURIComponent(dept);
+      } else {
+        alert("❌ รหัสผ่านไม่ถูกต้อง");
+      }
     }
 
-    function setStatus(index, value) {
-        if (!isAdmin) {
-            alert("ต้องเป็นแอดมินเท่านั้น!");
-            return;
-        }
+    // Logout → กลับไปหน้าแรก (แก้ชื่อไฟล์ตามหน้าเมนู 3 อัน)
+    function logout() {
+      localStorage.clear();
+      window.location.href = "index.html";  // ← เปลี่ยนได้หากหน้าแรกชื่ออื่น
+    }
+  </script>
 
-        let saved = JSON.parse(localStorage.getItem("attendanceData") || "{}");
-        saved[index] = value;
-        localStorage.setItem("attendanceData", JSON.stringify(saved));
-
-        loadTable();
-        updateSummary();
+  <!-- Fallback CSS -->
+  <style>
+    .btn {
+      padding: 10px 18px;
+      background: var(--blue);
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: 0.2s;
     }
 
-    function saveData() {
-        alert("บันทึกสำเร็จ");
-        updateSummary();
+    .btn:hover {
+      opacity: 0.8;
+      transform: translateY(-2px);
     }
 
-    function updateSummary() {
-        let saved = JSON.parse(localStorage.getItem("attendanceData") || "{}");
-        let totalCome = Object.values(saved).filter(v => v === "มา").length;
-        let totalAbsent = Object.values(saved).filter(v => v === "ไม่มา").length;
-
-        document.getElementById("summaryBox").innerHTML = `
-            มาวันนี้: ${totalCome} คน<br>
-            ไม่มา: ${totalAbsent} คน
-        `;
+    .input {
+      width: 100%;
+      padding: 10px;
+      border: 1.8px solid #ccc;
+      border-radius: 6px;
+      font-size: 15px;
     }
 
-    loadTable();
-    updateSummary();
-</script>
+    .small {
+      font-size: 13px;
+      color: #555;
+    }
+
+    .card {
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+      border: 2px solid #eaeaea;
+      border-radius: 12px;
+    }
+
+    .container {
+      padding: 16px;
+    }
+  </style>
 
 </body>
 </html>
