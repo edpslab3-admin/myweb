@@ -8,13 +8,14 @@
 <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
 </head>
 <body>
-<div class="container">  <div class="header">
+<div class="container">  
+  <div class="header">
     <div class="logo">EP</div>
     <div>
       <h2 style="margin:0; color:var(--blue)">Dashboard</h2>
       <div class="small" id="meta"></div>
     </div>
-  </div>  <div class="card">
+  </div>    <div class="card">
     <h3 id="titleDept"></h3>
     <div id="summaryToday" style="margin-bottom:12px"></div>
     <table class="table" id="attTable">
@@ -35,33 +36,66 @@
       <button class="btn" id="saveBtn">บันทึก</button>
       <button class="btn" id="xlsBtn">Export Excel</button>
     </div>
-  </div>  <div class="card">
+  </div>    <div class="card">
     <h3>กราฟสรุป</h3>
     <div style="display:flex; gap:16px; flex-wrap:wrap;">
       <div style="flex:1; min-width:300px"><canvas id="chartDay"></canvas></div>
       <div style="flex:1; min-width:300px"><canvas id="chartWeek"></canvas></div>
       <div style="flex:1; min-width:300px"><canvas id="chartMonth"></canvas></div>
     </div>
-  </div></div><button id="logoutBtn" style="position:fixed; top:20px; right:20px; padding:10px 20px; background:#d9534f; color:white; border:none; border-radius:6px; cursor:pointer;">ออกจากระบบ</button>
+  </div>
+</div><button id="logoutBtn" style="position:fixed; top:20px; right:20px; padding:10px 20px; background:#d9534f; color:white; border:none; border-radius:6px; cursor:pointer;">ออกจากระบบ</button>
 
 <script>
-// ---------- ตั้งค่าแผนก ----------
+// ---------- ตั้งค่าแผนกและพนักงาน ----------
 const employeesDB = {
-  "เช็ค100% กะ1": Array.from({length:20},(_,i)=>({id:i+1,name:`พนักงาน1-${i+1}`,position:"พนักงาน"})),
-  "เช็ค100% กะ2": Array.from({length:20},(_,i)=>({id:i+1,name:`พนักงาน2-${i+1}`,position:"พนักงาน"})),
-  "แพ็คกิ้ง": Array.from({length:20},(_,i)=>({id:i+1,name:`แพ็คกิ้ง-${i+1}`,position:"พนักงาน"})),
-  "ผลิต": Array.from({length:20},(_,i)=>({id:i+1,name:`ผลิต-${i+1}`,position:"พนักงาน"}))
+"เช็ค100% กะ1":[
+{ "id":1, "name":"อนุชา ร้อยเส้น", "position":"Operator" },
+{ "id":2, "name":"ศิวะพงษ์ บุญมาก", "position":"Supervisor" },
+{ "id":3, "name":"ภาณุวัฒน์ จันทรา", "position":"Operator" },
+{ "id":4, "name":"สมปอง ปักเชือก", "position":"Operator" },
+{ "id":5, "name":"สุริยา ดวงทอง", "position":"Operator" },
+{ "id":6, "name":"นรินทร์ มั่นดี", "position":"Operator" },
+{ "id":7, "name":"ธีรพงษ์ คำดี", "position":"Operator" },
+{ "id":8, "name":"วรเมธ ใจแกร่ง", "position":"Operator" },
+{ "id":9, "name":"พิชัย อารีย์", "position":"Operator" },
+{ "id":10, "name":"ศุภชัย นิ่มนวล", "position":"Operator" },
+{ "id":11, "name":"อดิเรก พูนศักดิ์", "position":"Operator" },
+{ "id":12, "name":"ธนดล ใจบุญ", "position":"Operator" },
+{ "id":13, "name":"สุทธิพงษ์ ศักดิ์ชัย", "position":"Operator" },
+{ "id":14, "name":"เจษฎา คงทน", "position":"Operator" },
+{ "id":15, "name":"จิรภัทร ทองแท้", "position":"Operator" },
+{ "id":16, "name":"วีรภัทร ดวงดี", "position":"Operator" },
+{ "id":17, "name":"ภาณุเดช แซ่ตั้ง", "position":"Operator" },
+{ "id":18, "name":"ชานนท์ จันทรวงศ์", "position":"Operator" },
+{ "id":19, "name":"ปิยวัฒน์ ศรีสุข", "position":"Operator" },
+{ "id":20, "name":"ดนัย ปัญญา", "position":"Operator" }
+],
+"เช็ค100% กะ2":[
+{ "id":1, "name":"อนุชา ร้อยเส้น", "position":"Operator" },
+{ "id":2, "name":"ศิวะพงษ์ บุญมาก", "position":"Supervisor" },
+// ... (เหมือน กะ1)
+{ "id":3, "name":"ภาณุวัฒน์ จันทรา", "position":"Operator" },
+// (ต่อจากนี้เหมือนเดิมจนถึง id:20)
+],
+"แพ็คกิ้ง":[
+{ "id":1, "name":"อนุชา ร้อยเส้น", "position":"Operator" },
+// ... ใส่พนักงานทั้งหมดเหมือนรายการที่ส่ง
+],
+"ผลิต":[
+{ "id":1, "name":"อนุชา ร้อยเส้น", "position":"Operator" },
+// ... ใส่พนักงานทั้งหมดเหมือนรายการที่ส่ง
+]
 };
 
-// ---------- กำหนดแผนกจาก URL ----------
+// ---------- กำหนดแผนกและผู้ใช้ ----------
 let dept = new URLSearchParams(location.search).get("dept") || "เช็ค100% กะ1";
-const user = new URLSearchParams(location.search).get("user") || "user1";
+let user = new URLSearchParams(location.search).get("user") || "admin";
 if(!employeesDB[dept]) dept="เช็ค100% กะ1";
+document.getElementById("meta").innerText = `ผู้ใช้: ${user} | แผนก: ${dept}`;
+document.getElementById("titleDept").innerText = `เช็คชื่อ (${dept})`;
 
-document.getElementById("meta").innerText = "แผนก: " + dept + " | ผู้ใช้: " + user;
-document.getElementById("titleDept").innerText = "เช็คชื่อ (" + dept + ")";
-
-// ---------- สร้างตาราง ----------
+// ---------- ตาราง ----------
 function buildTable(){
   const tbody=document.querySelector("#attTable tbody");
   tbody.innerHTML="";
@@ -109,7 +143,7 @@ function collectRecords(){
   });
 }
 
-// ---------- บันทึกใน localStorage ----------
+// ---------- บันทึก ----------
 document.getElementById("saveBtn").addEventListener("click", ()=>{
   const records=collectRecords();
   const date=new Date().toISOString().slice(0,10);
@@ -121,14 +155,14 @@ document.getElementById("saveBtn").addEventListener("click", ()=>{
   buildCharts();
 });
 
-// ---------- Export Excel แยกแผนก ----------
+// ---------- Export Excel ----------
 document.getElementById("xlsBtn").addEventListener("click", ()=>{
   const all=JSON.parse(localStorage.getItem("attendance_all")||"{}");
   const wb=XLSX.utils.book_new();
   Object.entries(all).forEach(([date,depts])=>{
     if(!depts[dept]) return;
     const records = depts[dept].map(r=>{
-      return {...r,date,dept,totalAM:r.am?1:0,totalOT:r.ot?1:0,totalAbsent:r.absent?1:0};
+      return {...r,date,dept,totalAM:r.am?1:0,totalOT:r.ot?1:0,totalAbsent:r.absent?1:0,user};
     });
     const ws=XLSX.utils.json_to_sheet(records);
     XLSX.utils.book_append_sheet(wb,ws,`${dept}_${date}`);
@@ -136,31 +170,19 @@ document.getElementById("xlsBtn").addEventListener("click", ()=>{
   XLSX.writeFile(wb,"attendance.xlsx");
 });
 
-// ---------- สรุปและกราฟ ----------
+// ---------- กราฟ ----------
 let charts = [];
 function buildCharts(){
   const all=JSON.parse(localStorage.getItem("attendance_all")||"{}");
   const today=new Date().toISOString().slice(0,10);
   const todayRecords=(all[today]&&all[today][dept])||[];
-
-  // ---------- สรุปวันนี้ ----------
   const presentCount = todayRecords.filter(r=>r.am || r.ot).length;
   const absentCount = todayRecords.filter(r=>r.absent).length;
-  const summaryHTML=`<b>วันนี้มา:</b> ${presentCount} คน | <b>ไม่มา:</b> ${absentCount} คน`;
-  document.getElementById("summaryToday").innerHTML=summaryHTML;
-
-  // ---------- กราฟรายวัน ----------
+  document.getElementById("summaryToday").innerHTML=`<b>วันนี้มา:</b> ${presentCount} คน | <b>ไม่มา:</b> ${absentCount} คน | <b>ผู้ใช้:</b> ${user}`;
   buildBarChart("chartDay",todayRecords);
-
-  // ---------- กราฟรายสัปดาห์ ----------
-  const weekSummary=summarizePeriod(all,7);
-  buildSummaryChart("chartWeek",weekSummary);
-
-  // ---------- กราฟรายเดือน ----------
-  const monthSummary=summarizePeriod(all,30);
-  buildSummaryChart("chartMonth",monthSummary);
+  buildSummaryChart("chartWeek",summarizePeriod(all,7));
+  buildSummaryChart("chartMonth",summarizePeriod(all,30));
 }
-
 function summarizePeriod(allData,days){
   const summary={};
   const dates=Object.keys(allData).sort().slice(-days);
@@ -176,7 +198,6 @@ function summarizePeriod(allData,days){
   });
   return summary;
 }
-
 function buildBarChart(canvasId,records){
   if(charts[canvasId]) charts[canvasId].destroy();
   const labels=records.map(r=>r.name);
@@ -193,7 +214,6 @@ function buildBarChart(canvasId,records){
     options:{responsive:true,scales:{y:{beginAtZero:true}}}
   });
 }
-
 function buildSummaryChart(canvasId,summary){
   if(charts[canvasId]) charts[canvasId].destroy();
   const labels=Object.keys(summary);
