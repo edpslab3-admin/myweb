@@ -7,9 +7,34 @@
 
   <link rel="stylesheet" href="styles.css" />
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <style>
+    /* ปุ่ม logout มุมขวาบน */
+    #logoutBtn {
+      position: absolute;
+      top: 16px;
+      right: 16px;
+      padding: 8px 16px;
+      background: #d9534f;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: 0.2s;
+    }
+    #logoutBtn:hover {
+      opacity: 0.8;
+      transform: translateY(-2px);
+    }
+  </style>
 </head>
 
 <body>
+
+  <!-- ปุ่มออกจากระบบ -->
+  <button id="logoutBtn" onclick="logout()">ออกจากระบบ</button>
+
   <div class="container">
 
     <!-- Header -->
@@ -110,7 +135,12 @@
       location.href = '/api/export';
     }
 
-    // Load data when page loads
+    // ฟังก์ชันออกจากระบบ
+    function logout() {
+      localStorage.removeItem("user_login");
+      window.location.href = "login.html";
+    }
+
     window.addEventListener('load', loadAll);
   </script>
 
