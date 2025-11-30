@@ -49,15 +49,6 @@
       </div>
     </div>
 
-    <!-- Summary Charts -->
-    <div class="card">
-      <h3>สรุป (วันนี้ และ 7 วัน)</h3>
-      <div style="display:flex; gap:16px">
-        <div style="flex:1"><canvas id="chartDay"></canvas></div>
-        <div style="flex:1"><canvas id="chartWeek"></canvas></div>
-      </div>
-    </div>
-
   </div>
 
   <!-- Logout Button -->
@@ -71,79 +62,61 @@
 
   <script>
     /* -------------------------------------
-       รายชื่อพนักงานแต่ละแผนก (20 / 20 / 20 / 15)
+       รายชื่อพนักงานแต่ละแผนก
     -------------------------------------- */
     const employeesDB = {
-      "ช่าง": [
-        { "id": 1, "name": "สมชาย ช่างเหล็ก" },
-        { "id": 2, "name": "ธนพล คำดี" },
-        { "id": 3, "name": "ภัทรวุฒิ ใจกล้า" },
-        { "id": 4, "name": "อดิศักดิ์ ทองมี" },
-        { "id": 5, "name": "ชูชาติ จันทรา" },
-        { "id": 6, "name": "ศักดิ์ดา วงศ์คำ" },
-        { "id": 7, "name": "ภาณุเดช อรุณ" },
-        { "id": 8, "name": "ทรงพล ลายไทย" },
-        { "id": 9, "name": "สันติภาพ สอนดี" },
-        { "id": 10, "name": "ชุติเดช แซ่ลี้" },
-        { "id": 11, "name": "กฤษณะ ไชยวงศ์" },
-        { "id": 12, "name": "ศราวุฒิ กองคำ" },
-        { "id": 13, "name": "ปฏิภาณ อ่อนศรี" },
-        { "id": 14, "name": "จิรายุ หอมหวล" },
-        { "id": 15, "name": "ธัชกร ขันแข็ง" },
-        { "id": 16, "name": "สุรเชษฐ์ คมสัน" },
-        { "id": 17, "name": "ดนัย ปัญญา" },
-        { "id": 18, "name": "ปิยะวัฒน์ ศรีสุข" },
-        { "id": 19, "name": "ชานนท์ จันทรวงศ์" },
-        { "id": 20, "name": "วีรภัทร ดวงดี" }
+      "เช็ค100% กะ1": [
+        { "id": 1, "name": "อนุชา ร้อยเส้น" },
+        { "id": 2, "name": "ศิวะพงษ์ บุญมาก" },
+        { "id": 3, "name": "ภาณุวัฒน์ จันทรา" },
+        { "id": 4, "name": "สมปอง ปักเชือก" },
+        { "id": 5, "name": "สุริยา ดวงทอง" },
+        { "id": 6, "name": "นรินทร์ มั่นดี" },
+        { "id": 7, "name": "ธีรพงษ์ คำดี" },
+        { "id": 8, "name": "วรเมธ ใจแกร่ง" },
+        { "id": 9, "name": "พิชัย อารีย์" },
+        { "id": 10, "name": "ศุภชัย นิ่มนวล" },
+        { "id": 11, "name": "อดิเรก พูนศักดิ์" },
+        { "id": 12, "name": "ธนดล ใจบุญ" },
+        { "id": 13, "name": "สุทธิพงษ์ ศักดิ์ชัย" },
+        { "id": 14, "name": "เจษฎา คงทน" },
+        { "id": 15, "name": "จิรภัทร ทองแท้" }
+      ],     
+      "เช็ค100% กะ2": [
+        { "id": 1, "name": "อนุชา ร้อยเส้น" },
+        { "id": 2, "name": "ศิวะพงษ์ บุญมาก" },
+        { "id": 3, "name": "ภาณุวัฒน์ จันทรา" },
+        { "id": 4, "name": "สมปอง ปักเชือก" },
+        { "id": 5, "name": "สุริยา ดวงทอง" },
+        { "id": 6, "name": "นรินทร์ มั่นดี" },
+        { "id": 7, "name": "ธีรพงษ์ คำดี" },
+        { "id": 8, "name": "วรเมธ ใจแกร่ง" },
+        { "id": 9, "name": "พิชัย อารีย์" },
+        { "id": 10, "name": "ศุภชัย นิ่มนวล" },
+        { "id": 11, "name": "อดิเรก พูนศักดิ์" },
+        { "id": 12, "name": "ธนดล ใจบุญ" },
+        { "id": 13, "name": "สุทธิพงษ์ ศักดิ์ชัย" },
+        { "id": 14, "name": "เจษฎา คงทน" },
+        { "id": 15, "name": "จิรภัทร ทองแท้" }
       ],
-
+      "แพ็คกิ้ง": [
+        { "id": 1, "name": "อนุชา ร้อยเส้น" },
+        { "id": 2, "name": "ศิวะพงษ์ บุญมาก" },
+        { "id": 3, "name": "ภาณุวัฒน์ จันทรา" },
+        { "id": 4, "name": "สมปอง ปักเชือก" },
+        { "id": 5, "name": "สุริยา ดวงทอง" },
+        { "id": 6, "name": "นรินทร์ มั่นดี" },
+        { "id": 7, "name": "ธีรพงษ์ คำดี" },
+        { "id": 8, "name": "วรเมธ ใจแกร่ง" },
+        { "id": 9, "name": "พิชัย อารีย์" },
+        { "id": 10, "name": "ศุภชัย นิ่มนวล" },
+        { "id": 11, "name": "อดิเรก พูนศักดิ์" },
+        { "id": 12, "name": "ธนดล ใจบุญ" },
+        { "id": 13, "name": "สุทธิพงษ์ ศักดิ์ชัย" },
+        { "id": 14, "name": "เจษฎา คงทน" },
+        { "id": 15, "name": "จิรภัทร ทองแท้" }
+      ],
       "ผลิต": [
-        { "id": 1, "name": "พัชรพล พูนทรัพย์" },
-        { "id": 2, "name": "กิตติธัช ชัยมงคล" },
-        { "id": 3, "name": "ธนากร รุ่งโรจน์" },
-        { "id": 4, "name": "ภานุวัฒน์ สายทอง" },
-        { "id": 5, "name": "รณพงษ์ อุดม" },
-        { "id": 6, "name": "ปรัชญา เมืองไทย" },
-        { "id": 7, "name": "ชยกร สาระดี" },
-        { "id": 8, "name": "ณัฐพงษ์ ฟ้าใหม่" },
-        { "id": 9, "name": "ภาคภูมิ จิตรดี" },
-        { "id": 10, "name": "สิรวิชญ์ ศักดิ์ชัย" },
-        { "id": 11, "name": "ปิยวัฒน์ ทองยศ" },
-        { "id": 12, "name": "ธนวัฒน์ จันทรสุข" },
-        { "id": 13, "name": "ธีรภัทร บุญชม" },
-        { "id": 14, "name": "อัครเดช สันติ" },
-        { "id": 15, "name": "ภานุเดช มงคลสวัสดิ์" },
-        { "id": 16, "name": "วรพล อารีย์" },
-        { "id": 17, "name": "พีระดนย์ สิงห์ทอง" },
-        { "id": 18, "name": "ศุภกิตติ์ แก้วใส" },
-        { "id": 19, "name": "ภาสกร คงทน" },
-        { "id": 20, "name": "จักรพงษ์ แซ่ตั้ง" }
-      ],
-
-      "คลังสินค้า": [
-        { "id": 1, "name": "วิชญ์พล เกิดดี" },
-        { "id": 2, "name": "ธีรเดช รัตน์วงศ์" },
-        { "id": 3, "name": "ณัฐพล ชาญชัย" },
-        { "id": 4, "name": "พงศ์พิพัฒน์ อินทร์ทอง" },
-        { "id": 5, "name": "ภาคิน ปรีดี" },
-        { "id": 6, "name": "นครินทร์ ใจงาม" },
-        { "id": 7, "name": "สุรเดช เรืองศรี" },
-        { "id": 8, "name": "สันติภาพ ทองแท้" },
-        { "id": 9, "name": "ชนินทร์ ใจดี" },
-        { "id": 10, "name": "กฤตภาส อุดมทรัพย์" },
-        { "id": 11, "name": "คชภัค วงศ์ภักดี" },
-        { "id": 12, "name": "ศุภกร มีชัย" },
-        { "id": 13, "name": "ธีรเมธ คงทน" },
-        { "id": 14, "name": "อัศวิน พูนเงิน" },
-        { "id": 15, "name": "ภัทรพล ศรีสุข" },
-        { "id": 16, "name": "ปิยะวัฒน์ คำแหง" },
-        { "id": 17, "name": "วรวิชญ์ มณีทอง" },
-        { "id": 18, "name": "กฤษฎา พงไพร" },
-        { "id": 19, "name": "ศิวกร อิ่มดี" },
-        { "id": 20, "name": "ณัฐดนัย เฉลิมชัย" }
-      ],
-
-      "เชือกร้อย": [
         { "id": 1, "name": "อนุชา ร้อยเส้น" },
         { "id": 2, "name": "ศิวะพงษ์ บุญมาก" },
         { "id": 3, "name": "ภาณุวัฒน์ จันทรา" },
@@ -162,23 +135,33 @@
       ]
     };
 
-    /* ------------------------------------------------------------------
-       Main Script
-    ------------------------------------------------------------------ */
-
+    /* -------------------------------------
+       อ่านค่าพารามิเตอร์
+    -------------------------------------- */
     const params = new URLSearchParams(location.search);
-    const dept = params.get("dept") || "ช่าง";
+    let dept = params.get("dept") || "ช่าง";
     const user = params.get("user") || "user1";
+
+    // ตรวจสอบว่ามีแผนกจริงหรือไม่
+    if (!employeesDB[dept]) {
+      console.warn("Dept not found:", dept, " → ใช้ค่า 'เช็ค100% กะ1' แทน");
+      dept = "เช็ค100% กะ2";
+    }
 
     document.getElementById("meta").innerText = "แผนก: " + dept + " | ผู้ใช้: " + user;
     document.getElementById("titleDept").innerText = "เช็คชื่อ (" + dept + ")";
 
+    /* -------------------------------------
+       ฟังก์ชันโหลดรายชื่อ
+    -------------------------------------- */
     function getEmployees() {
       return employeesDB[dept] || [];
     }
 
     function buildTable() {
       const employees = getEmployees();
+      console.log("Loaded employees:", employees);
+
       const tbody = document.querySelector('#attTable tbody');
       tbody.innerHTML = '';
 
@@ -203,6 +186,9 @@
       });
     }
 
+    /* -------------------------------------
+       ป้องกันเลือกสถานะซ้ำ
+    -------------------------------------- */
     window.checkConflict = function (id) {
       const am = document.getElementById("am_" + id);
       const ot = document.getElementById("ot_" + id);
@@ -217,56 +203,19 @@
       }
     };
 
-    function collectRecords() {
-      const employees = getEmployees();
-      const recs = [];
+    /* -------------------------------------
+       โหลดตารางเมื่อ DOM พร้อม
+    -------------------------------------- */
+    document.addEventListener("DOMContentLoaded", buildTable);
 
-      employees.forEach(e => {
-        recs.push({
-          id: e.id,
-          name: e.name,
-          am: document.getElementById('am_' + e.id).checked,
-          ot: document.getElementById('ot_' + e.id).checked,
-          absent: document.getElementById('abs_' + e.id).checked,
-          leave: document.getElementById('leave_' + e.id).value,
-          note: document.getElementById('note_' + e.id).value
-        });
-      });
-
-      return recs;
-    }
-
-    document.getElementById("csvBtn").addEventListener("click", () => {
-      const recs = collectRecords();
-      let csv = "id,name,am,ot,absent,leave,note\n";
-
-      recs.forEach(r => {
-        csv += [
-          r.id, r.name, r.am, r.ot, r.absent,
-          r.leave || "", (r.note || "").replace(/\n/g, " ")
-        ].join(",") + "\n";
-      });
-
-      const a = document.createElement("a");
-      a.href = URL.createObjectURL(new Blob([csv]));
-      a.download = "attendance_" + dept + ".csv";
-      a.click();
-    });
-
-    document.getElementById("xlsBtn").addEventListener("click", () => {
-      const data = collectRecords();
-      const wb = XLSX.utils.book_new();
-      const ws = XLSX.utils.json_to_sheet(data);
-      XLSX.utils.book_append_sheet(wb, ws, "Attendance");
-      XLSX.writeFile(wb, "attendance_" + dept + ".xlsx");
-    });
-
+    /* -------------------------------------
+       ปุ่ม Logout
+    -------------------------------------- */
     document.getElementById("logoutBtn").addEventListener("click", () => {
       localStorage.removeItem("user_login");
       window.location.href = "index.html";
     });
 
-    window.onload = buildTable;
   </script>
 
 </body>
