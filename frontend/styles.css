@@ -1,14 +1,190 @@
-:root{--blue:#1e88e5;--bg:#eef6ff;--card:#fff}
-body{font-family:Inter,Arial,Helvetica,sans-serif;background:var(--bg);margin:0;color:#0b2545}
-.container{max-width:1100px;margin:0 auto;padding:24px}
-.header{display:flex;align-items:center;gap:16px;margin-bottom:18px}
-.logo{width:56px;height:56px;border-radius:10px;background:linear-gradient(135deg,var(--blue),#4facfe);display:flex;align-items:center;justify-content:center;color:white;font-weight:700;font-size:18px}
-.card{background:var(--card);border-radius:12px;padding:16px;box-shadow:0 6px 20px rgba(14,30,70,0.06);margin-bottom:18px}
-.dept-grid{display:flex;gap:16px;flex-wrap:wrap}
-.dept{flex:1;min-width:220px;cursor:pointer;border-radius:12px;padding:18px;background:white;border:1px solid rgba(30,136,229,0.08);text-align:center}
-.btn{background:var(--blue);color:white;padding:10px 16px;border-radius:8px;border:none;cursor:pointer}
-.table{width:100%;border-collapse:collapse}
-.table th,.table td{padding:8px;border-bottom:1px solid #eef2fb;text-align:left}
-.input{padding:8px;border:1px solid #dfe9fb;border-radius:8px;width:100%}
-.small{font-size:13px;color:#475569}
-.footer{font-size:13px;color:#67748a;margin-top:12px}
+/* ================== Root Variables ================== */
+:root {
+  --blue: #1e88e5;
+  --bg: #eef6ff;
+  --card: #ffffff;
+  --text-dark: #0b2545;
+  --border-light: rgba(30, 136, 229, 0.08);
+  --shadow-card: 0 6px 20px rgba(14, 30, 70, 0.06);
+}
+
+/* ================== Global Styles ================== */
+body {
+  font-family: Inter, Arial, Helvetica, sans-serif;
+  background: var(--bg);
+  margin: 0;
+  color: var(--text-dark);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ================== Layout ================== */
+.container {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 24px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 18px;
+  flex-wrap: wrap;
+}
+
+/* ================== Logo ================== */
+.logo {
+  width: 56px;
+  height: 56px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, var(--blue), #4facfe);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ffffff;
+  font-weight: 700;
+  font-size: 18px;
+  user-select: none;
+}
+
+/* ================== Cards ================== */
+.card {
+  background: var(--card);
+  border-radius: 12px;
+  padding: 18px;
+  box-shadow: var(--shadow-card);
+  margin-bottom: 18px;
+  border: 1px solid var(--border-light);
+}
+
+/* ================== Department Grid ================== */
+.dept-grid {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+  width: 100%;
+}
+
+.dept {
+  flex: 1;
+  min-width: 220px;
+  cursor: pointer;
+  border-radius: 12px;
+  padding: 18px;
+  background: #ffffff;
+  border: 1px solid var(--border-light);
+  text-align: center;
+  font-weight: 600;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.dept:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 4px 14px rgba(30, 136, 229, 0.16);
+}
+
+.dept:active {
+  transform: translateY(0);
+}
+
+/* ================== Buttons ================== */
+.btn {
+  background: var(--blue);
+  color: #ffffff;
+  padding: 10px 16px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  font-weight: 600;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.btn:hover {
+  opacity: 0.85;
+  transform: translateY(-2px);
+}
+
+.btn:active {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* ================== Table ================== */
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.table th,
+.table td {
+  padding: 10px 8px;
+  border-bottom: 1px solid #eef2fb;
+  text-align: left;
+}
+
+.table th {
+  font-weight: 700;
+  background: #f8fbff;
+}
+
+/* ================== Input ================== */
+.input {
+  padding: 8px 12px;
+  border: 1px solid #dfe9fb;
+  border-radius: 8px;
+  width: 100%;
+  font-size: 14px;
+  box-sizing: border-box;
+  transition: border 0.2s ease, box-shadow 0.2s ease;
+}
+
+.input:focus {
+  border-color: var(--blue);
+  box-shadow: 0 0 0 3px rgba(30, 136, 229, 0.18);
+  outline: none;
+}
+
+/* ================== Utility Text ================== */
+.small {
+  font-size: 13px;
+  color: #475569;
+}
+
+.footer {
+  font-size: 13px;
+  color: #67748a;
+  margin-top: 12px;
+  text-align: center;
+}
+
+/* ================== Responsive ================== */
+@media (max-width: 640px) {
+  .dept {
+    min-width: 100%;
+  }
+
+  .header {
+    justify-content: center;
+    text-align: center;
+  }
+
+  .logo {
+    width: 48px;
+    height: 48px;
+    font-size: 16px;
+  }
+}
+
+/* ================== Fallback for Charts (Optional Safety) ================== */
+canvas {
+  max-width: 100%;
+}
